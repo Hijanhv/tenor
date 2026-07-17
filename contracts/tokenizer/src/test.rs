@@ -187,6 +187,82 @@ fn full_lifecycle_saver_profits_at_maturity() {
     assert_eq!(sy_token.balance(&saver), sy_out);
 }
 
+/// Time decay AMM: with no trades, the PT price is pulled from its discount toward par
+/// as the tenor elapses, and the implied fixed rate stays stable.
+#[test]
+fn time_decay_pulls_price_to_par() {
+    let env = Env::default();
+    env.mock_all_auths();
+    env.ledger().set_timestamp(1_000);
+    let admin = Address::generate(&env);
+    let lp = Address::generate(&env);
+    let (sy, sy_admin, _) = new_token(&env, &admin);
+    let (usdc, usdc_admin, _) = new_token(&env, &admin);
+
+    let market = env.register(Tenor, ());
+    let c = TenorClient::new(&env, &market);
+    c.initialize(&admin, &sy, &usdc, &(1_000 + YEAR), &SCALE);
+
+    sy_admin.mint(&lp, &100_000);
+    c.deposit(&lp, &100_000);
+    usdc_admin.mint(&lp, &95_000);
+    c.add_liquidity(&lp, &100_000, &95_000);
+
+    // At issuance: 0.95.
+    assert_eq!(c.pt_price(), 9_500_000);
+    let r0 = c.fixed_rate();
+
+    // Halfway: pulled to ~0.975.
+    env.ledger().set_timestamp(1_000 + YEAR / 2);
+    assert_eq!(c.pt_price(), 9_750_000);
+    let r1 = c.fixed_rate();
+
+    // At maturity: par.
+    env.ledger().set_timestamp(1_000 + YEAR);
+    assert_eq!(c.pt_price(), 10_000_000);
+
+    // The implied fixed rate stayed stable (both near 5 percent) rather than drifting.
+    assert!(r0 > 500_000 && r0 < 560_000, "r0 {}", r0);
+    assert!(r1 > 480_000 && r1 < 560_000, "r1 {}", r1);
+}
+
+/// Carry vault: deposit stable, keeper invests into PT, settle at maturity, claim more back.
+#[test]
+fn carry_vault_locks_fixed_return() {
+    let env = Env::default();
+    env.mock_all_auths();
+    env.ledger().set_timestamp(1_000);
+    let admin = Address::generate(&env);
+    let lp = Address::generate(&env);
+    let saver = Address::generate(&env);
+    let (sy, sy_admin, sy_token) = new_token(&env, &admin);
+    let (usdc, usdc_admin, _) = new_token(&env, &admin);
+
+    let market = env.register(Tenor, ());
+    let c = TenorClient::new(&env, &market);
+    c.initialize(&admin, &sy, &usdc, &(1_000 + YEAR), &SCALE);
+
+    sy_admin.mint(&lp, &100_000);
+    c.deposit(&lp, &100_000);
+    usdc_admin.mint(&lp, &95_000);
+    c.add_liquidity(&lp, &100_000, &95_000);
+
+    // Saver deposits 950 USDC, keeper invests it into PT at the discount.
+    usdc_admin.mint(&saver, &950);
+    let shares = c.vault_deposit(&saver, &950);
+    assert_eq!(shares, 950);
+    let pt_bought = c.vault_invest(&950);
+    assert!(pt_bought > 950, "carry should buy more PT than cash in: {}", pt_bought);
+
+    // At maturity the vault redeems PT at par and the saver claims more than deposited.
+    env.ledger().set_timestamp(1_000 + YEAR + 1);
+    c.vault_settle();
+    let got = c.vault_claim(&saver);
+    assert!(got > 950, "saver did not profit from carry: {}", got);
+    assert_eq!(sy_token.balance(&saver), got);
+    assert_eq!(c.vault_shares(&saver), 0);
+}
+
 #[test]
 fn implied_fixed_rate_matches_hand_math() {
     let env = Env::default();

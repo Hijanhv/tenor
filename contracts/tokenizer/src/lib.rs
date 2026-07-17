@@ -32,6 +32,7 @@ pub enum Error {
     BadAmount = 6,
     IndexWentDown = 7,
     NoLiquidity = 8,
+    VaultClosed = 9,
 }
 
 #[contracttype]
@@ -53,6 +54,15 @@ pub enum DataKey {
     Debt(Address), // YT reward debt, ACC-scaled
     Owed(Address), // harvested-but-unclaimed asset-yield
     Lp(Address),   // LP shares of the PT/quote pool
+    // time-decay AMM
+    Start, // market creation timestamp, for the pull-to-par curve
+    // fixed-rate carry vault (deposit USDC, auto-buys PT, redeems at maturity)
+    VaultShares(Address),
+    VaultTotalShares,
+    VaultPt,       // PT held by the vault
+    VaultQuote,    // idle USDC in the vault waiting to be invested
+    VaultSy,       // SY held after settlement
+    VaultSettled,  // 0 = open, 1 = settled at maturity
 }
 
 const FEE_BPS: i128 = 30; // 0.30% swap fee
@@ -70,6 +80,17 @@ pub struct MarketInfo {
     pub reserve_pt: i128,
     pub reserve_quote: i128,
     pub matured: bool,
+}
+
+#[contracttype]
+#[derive(Clone)]
+pub struct VaultInfo {
+    pub total_shares: i128,
+    pub pt: i128,
+    pub idle_quote: i128,
+    pub sy: i128,
+    pub nav_quote: i128,
+    pub settled: bool,
 }
 
 #[contract]
@@ -106,6 +127,12 @@ impl Tenor {
         s.set(&DataKey::AccYield, &0i128);
         s.set(&DataKey::ReserveQuote, &0i128);
         s.set(&DataKey::LpTotal, &0i128);
+        s.set(&DataKey::Start, &env.ledger().timestamp());
+        s.set(&DataKey::VaultTotalShares, &0i128);
+        s.set(&DataKey::VaultPt, &0i128);
+        s.set(&DataKey::VaultQuote, &0i128);
+        s.set(&DataKey::VaultSy, &0i128);
+        s.set(&DataKey::VaultSettled, &0i128);
     }
 
     /// Keeper pushes the latest SY->asset rate and accrues yield to YT holders.
@@ -273,8 +300,10 @@ impl Tenor {
         if rp <= 0 || rq <= 0 {
             panic_err(&env, Error::NoLiquidity);
         }
+        // price on the time-decayed effective reserve so PT costs more as it nears par
+        let eff = eff_reserve_quote(&env);
         let dx = quote_in * (10_000 - FEE_BPS) / 10_000;
-        let pt_out = rp * dx / (rq + dx);
+        let pt_out = rp * dx / (eff + dx);
         token::TokenClient::new(&env, &quote(&env)).transfer(
             &buyer,
             &env.current_contract_address(),
@@ -310,13 +339,19 @@ impl Tenor {
         quote_out
     }
 
-    /// PT spot price in quote units (1e7-scaled). 1.0 == par.
+    /// PT spot price in quote units (1e7-scaled). 1.0 == par. Uses the time-decayed
+    /// effective reserve so the mark converges to par as maturity approaches.
     pub fn pt_price(env: Env) -> i128 {
         let rp = reserve_pt(&env);
         if rp <= 0 {
             return 0;
         }
-        reserve_quote(&env) * SCALE / rp
+        eff_reserve_quote(&env) * SCALE / rp
+    }
+
+    /// Fraction of the tenor elapsed, 1e7-scaled (0 at issuance, 1e7 at maturity).
+    pub fn time_progress(env: Env) -> i128 {
+        time_frac(&env)
     }
 
     /// Implied annualized fixed rate (1e7-scaled) from the pool's current PT price.
@@ -337,8 +372,131 @@ impl Tenor {
         if rp <= 0 || rq <= 0 || quote_in <= 0 {
             return 0;
         }
+        let _ = rq;
         let dx = quote_in * (10_000 - FEE_BPS) / 10_000;
-        rp * dx / (rq + dx)
+        rp * dx / (eff_reserve_quote(&env) + dx)
+    }
+
+    // ===================== Fixed-rate carry vault =====================
+    // Deposit the stable token once. A keeper invests idle cash into PT at the current
+    // discount, the vault holds to maturity, then redeems PT at par. Depositors claim the
+    // yield-bearing asset worth the locked fixed return. One deposit, a fixed outcome.
+
+    /// Deposit `quote_in` of the stable token into the carry vault. Returns shares minted.
+    pub fn vault_deposit(env: Env, user: Address, quote_in: i128) -> i128 {
+        user.require_auth();
+        if quote_in <= 0 {
+            panic_err(&env, Error::BadAmount);
+        }
+        if get_i128(&env, &DataKey::VaultSettled) == 1 {
+            panic_err(&env, Error::VaultClosed);
+        }
+        let nav = vault_nav_quote(&env); // NAV before this deposit
+        token::TokenClient::new(&env, &quote(&env)).transfer(
+            &user,
+            &env.current_contract_address(),
+            &quote_in,
+        );
+        let total_shares = get_i128(&env, &DataKey::VaultTotalShares);
+        let minted = if total_shares == 0 || nav <= 0 {
+            quote_in
+        } else {
+            quote_in * total_shares / nav
+        };
+        set_i128(&env, &DataKey::VaultQuote, get_i128(&env, &DataKey::VaultQuote) + quote_in);
+        set_i128(
+            &env,
+            &DataKey::VaultShares(user.clone()),
+            get_i128(&env, &DataKey::VaultShares(user.clone())) + minted,
+        );
+        set_i128(&env, &DataKey::VaultTotalShares, total_shares + minted);
+        minted
+    }
+
+    /// Keeper deploys `amount` of idle vault cash into PT at the current price (the carry).
+    pub fn vault_invest(env: Env, amount: i128) -> i128 {
+        admin(&env).require_auth();
+        let idle = get_i128(&env, &DataKey::VaultQuote);
+        if amount <= 0 || amount > idle {
+            panic_err(&env, Error::BadAmount);
+        }
+        let rp = reserve_pt(&env);
+        let rq = reserve_quote(&env);
+        if rp <= 0 || rq <= 0 {
+            panic_err(&env, Error::NoLiquidity);
+        }
+        let eff = eff_reserve_quote(&env);
+        let dx = amount * (10_000 - FEE_BPS) / 10_000;
+        let pt_out = rp * dx / (eff + dx);
+        // move cash vault -> pool, move PT pool -> vault (TotalPt unchanged, PT still exists)
+        set_i128(&env, &DataKey::VaultQuote, idle - amount);
+        set_i128(&env, &DataKey::ReserveQuote, rq + amount);
+        set_i128(&env, &DataKey::Pt(env.current_contract_address()), rp - pt_out);
+        set_i128(&env, &DataKey::VaultPt, get_i128(&env, &DataKey::VaultPt) + pt_out);
+        pt_out
+    }
+
+    /// After maturity, redeem all vault PT at par into SY. This locks in the fixed return.
+    pub fn vault_settle(env: Env) {
+        if env.ledger().timestamp() < maturity(&env) {
+            panic_err(&env, Error::NotMatured);
+        }
+        let pt = get_i128(&env, &DataKey::VaultPt);
+        if pt > 0 {
+            let sy_out = pt * SCALE / index(&env);
+            set_i128(&env, &DataKey::TotalPt, get_i128(&env, &DataKey::TotalPt) - pt);
+            set_i128(&env, &DataKey::TotalSy, get_i128(&env, &DataKey::TotalSy) - sy_out);
+            set_i128(&env, &DataKey::VaultSy, get_i128(&env, &DataKey::VaultSy) + sy_out);
+            set_i128(&env, &DataKey::VaultPt, 0);
+        }
+        set_i128(&env, &DataKey::VaultSettled, 1);
+    }
+
+    /// After settlement, claim your pro-rata SY and any uninvested cash, burning shares.
+    pub fn vault_claim(env: Env, user: Address) -> i128 {
+        user.require_auth();
+        if get_i128(&env, &DataKey::VaultSettled) != 1 {
+            panic_err(&env, Error::NotMatured);
+        }
+        let shares = get_i128(&env, &DataKey::VaultShares(user.clone()));
+        if shares <= 0 {
+            return 0;
+        }
+        let total = get_i128(&env, &DataKey::VaultTotalShares);
+        let sy_total = get_i128(&env, &DataKey::VaultSy);
+        let quote_total = get_i128(&env, &DataKey::VaultQuote);
+        let sy_out = sy_total * shares / total;
+        let quote_out = quote_total * shares / total;
+        set_i128(&env, &DataKey::VaultShares(user.clone()), 0);
+        set_i128(&env, &DataKey::VaultTotalShares, total - shares);
+        set_i128(&env, &DataKey::VaultSy, sy_total - sy_out);
+        set_i128(&env, &DataKey::VaultQuote, quote_total - quote_out);
+        if sy_out > 0 {
+            payout_sy(&env, &user, sy_out);
+        }
+        if quote_out > 0 {
+            token::TokenClient::new(&env, &quote(&env)).transfer(
+                &env.current_contract_address(),
+                &user,
+                &quote_out,
+            );
+        }
+        sy_out
+    }
+
+    pub fn vault_shares(env: Env, user: Address) -> i128 {
+        get_i128(&env, &DataKey::VaultShares(user))
+    }
+
+    pub fn vault_info(env: Env) -> VaultInfo {
+        VaultInfo {
+            total_shares: get_i128(&env, &DataKey::VaultTotalShares),
+            pt: get_i128(&env, &DataKey::VaultPt),
+            idle_quote: get_i128(&env, &DataKey::VaultQuote),
+            sy: get_i128(&env, &DataKey::VaultSy),
+            nav_quote: vault_nav_quote(&env),
+            settled: get_i128(&env, &DataKey::VaultSettled) == 1,
+        }
     }
 
     pub fn market_info(env: Env) -> MarketInfo {
@@ -444,6 +602,45 @@ fn reserve_pt(env: &Env) -> i128 {
 fn reserve_quote(env: &Env) -> i128 {
     get_i128(env, &DataKey::ReserveQuote)
 }
+
+/// Fraction of the tenor elapsed, 1e7-scaled (0 at issuance, SCALE at maturity).
+fn time_frac(env: &Env) -> i128 {
+    let start: u64 = env.storage().instance().get(&DataKey::Start).unwrap_or(0);
+    let mat = maturity(env);
+    let now = env.ledger().timestamp();
+    if mat <= start || now <= start {
+        return 0;
+    }
+    let f = ((now - start) as i128) * SCALE / ((mat - start) as i128);
+    if f > SCALE {
+        SCALE
+    } else {
+        f
+    }
+}
+
+/// Effective quote reserve used for pricing. Adds a virtual amount that grows linearly
+/// with elapsed time, so the PT price is pulled toward par (1.0) by maturity. This keeps
+/// the implied fixed rate stable over time instead of drifting with the clock.
+fn eff_reserve_quote(env: &Env) -> i128 {
+    let rq = reserve_quote(env);
+    let rp = reserve_pt(env);
+    if rp <= rq {
+        return rq; // already at or above par, nothing to pull
+    }
+    rq + (rp - rq) * time_frac(env) / SCALE
+}
+
+/// Vault net asset value in quote units: idle USDC + PT marked at price + settled SY.
+fn vault_nav_quote(env: &Env) -> i128 {
+    let idle = get_i128(env, &DataKey::VaultQuote);
+    let pt = get_i128(env, &DataKey::VaultPt);
+    let sy = get_i128(env, &DataKey::VaultSy);
+    let rp = reserve_pt(env);
+    let pt_val = if rp > 0 { pt * eff_reserve_quote(env) / rp } else { 0 };
+    let sy_val = sy * index(env) / SCALE;
+    idle + pt_val + sy_val
+}
 fn maturity(env: &Env) -> u64 {
     env.storage().instance().get(&DataKey::Maturity).unwrap_or_else(|| panic_err(env, Error::NotInitialized))
 }
@@ -454,7 +651,12 @@ fn index(env: &Env) -> i128 {
 fn is_persistent(key: &DataKey) -> bool {
     matches!(
         key,
-        DataKey::Pt(_) | DataKey::Yt(_) | DataKey::Debt(_) | DataKey::Owed(_) | DataKey::Lp(_)
+        DataKey::Pt(_)
+            | DataKey::Yt(_)
+            | DataKey::Debt(_)
+            | DataKey::Owed(_)
+            | DataKey::Lp(_)
+            | DataKey::VaultShares(_)
     )
 }
 fn get_i128(env: &Env, key: &DataKey) -> i128 {

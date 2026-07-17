@@ -7,13 +7,13 @@
 <p align="center">
   <img src="https://img.shields.io/badge/network-Stellar%20Testnet-4F46E5" alt="testnet"/>
   <img src="https://img.shields.io/badge/contracts-Soroban%20(Rust)-06B6D4" alt="soroban"/>
-  <img src="https://img.shields.io/badge/tests-7%20passing-16a34a" alt="tests"/>
+  <img src="https://img.shields.io/badge/tests-9%20passing-16a34a" alt="tests"/>
   <img src="https://img.shields.io/badge/license-MIT-64748B" alt="license"/>
 </p>
 
 <p align="center">
   <b><a href="https://tenor-blond-xi.vercel.app">Live app</a></b> ·
-  <a href="https://stellar.expert/explorer/testnet/contract/CBGCQ7FPK5I2X7FQIUFKEIXMJ6BGZCQAD5KF6JESVFNQ4T6AGC23P3JF">Live contract on testnet</a>
+  <a href="https://stellar.expert/explorer/testnet/contract/CBPQRQTLLJQOJGXKDNVU4VKXHSTBZMFPUUSYY3X5J5RJZXNV5POWNNQV">Live contract on testnet</a>
 </p>
 
 ---
@@ -46,8 +46,8 @@ One rule ties them together: `PT(x) + YT(x) = x`. You can always recombine them 
 Three layers, each small and composable, built so the rest of Stellar plugs straight in.
 
 1. **Tokenizer.** The core engine. Deposit a yield bearing asset, get equal PT and YT. Yield streams to YT holders using an accumulator so it splits correctly no matter when people join or leave. Principal redeems at maturity. This is the primitive.
-2. **Rate AMM.** A constant product pool prices PT against a stable token. The pool price is the market's view of the fixed rate, and it moves as supply and demand change. Buying PT here is how a saver locks a rate.
-3. **Strategy.** A systematic fixed rate carry that buys the cheapest principal and holds it to maturity, turning the discount into a booked return.
+2. **Time decay rate AMM.** A pool prices PT against a stable token, with a pull to par curve so the price climbs toward 1.00 as maturity approaches. This keeps the implied fixed rate stable over time instead of drifting with the clock. Buying PT here is how a saver locks a rate.
+3. **Carry vault.** An on chain vault that takes a single deposit, buys the cheapest principal, holds it to maturity, redeems at par, and hands depositors the locked return. The quant strategy as one click.
 
 A saver never has to understand any of this. They see one number, the fixed rate, type an amount, and lock it in a couple of clicks.
 
@@ -75,16 +75,16 @@ flowchart LR
 
 **Contracts (Soroban, Rust, `soroban-sdk` 26)**
 
-- `contracts/tokenizer` carries the whole protocol: split and recombine, redeem at maturity, the yield accumulator for YT, and the built in PT rate AMM. Public entry points: `initialize`, `sync`, `deposit`, `combine`, `redeem_pt`, `claim_yield`, `transfer_pt`, `transfer_yt`, `add_liquidity`, `buy_pt`, `sell_pt`, `pt_price`, `fixed_rate`, `quote_buy_pt`, `pending_yield`, `market_info`.
+- `contracts/tokenizer` carries the whole protocol: split and recombine, redeem at maturity, the yield accumulator for YT, the time decay PT rate AMM, and the fixed rate carry vault. Public entry points: `initialize`, `sync`, `deposit`, `combine`, `redeem_pt`, `claim_yield`, `transfer_pt`, `transfer_yt`, `add_liquidity`, `buy_pt`, `sell_pt`, `pt_price`, `fixed_rate`, `time_progress`, `quote_buy_pt`, `pending_yield`, `market_info`, `vault_deposit`, `vault_invest`, `vault_settle`, `vault_claim`, `vault_info`.
 - `contracts/mock-token` is a small SEP-41 token used for the testnet demo so a fresh wallet can mint test USDC and test yield asset with no trustlines.
 
 **Live on Stellar Testnet**
 
 | Piece | Contract id |
 | --- | --- |
-| Tokenizer + Rate AMM | [`CBGCQ7FP…GC23P3JF`](https://stellar.expert/explorer/testnet/contract/CBGCQ7FPK5I2X7FQIUFKEIXMJ6BGZCQAD5KF6JESVFNQ4T6AGC23P3JF) |
-| Test yield asset (TSY) | [`CBBVICQ3…TESNBI5R`](https://stellar.expert/explorer/testnet/contract/CBBVICQ3UNMK5Q7BROPX6KBEHJBUOK7SILMJE3AHPWP56KC7TESNBI5R) |
-| Test USDC | [`CDYVZXXZ…GNZ3IC5P`](https://stellar.expert/explorer/testnet/contract/CDYVZXXZET5XETCLZJ65M2YXGYXXTO76QTEQFFEITAAMVKNPGNZ3IC5P) |
+| Tokenizer + Rate AMM | [`CBPQRQTL…POWNNQV`](https://stellar.expert/explorer/testnet/contract/CBPQRQTLLJQOJGXKDNVU4VKXHSTBZMFPUUSYY3X5J5RJZXNV5POWNNQV) |
+| Test yield asset (TSY) | [`CACC63KH…QU5N5U6`](https://stellar.expert/explorer/testnet/contract/CACC63KHPZBAYUSK2EX6GZSKTS4M24TLDMMJXMTQHM2PFCTYWQU5N5U6) |
+| Test USDC | [`CAF3LGHE…J2MX75B`](https://stellar.expert/explorer/testnet/contract/CAF3LGHESH7YB25JITBRVPYUZCT46OXGVFY4MGXR2QXYIUP7XJ2MX75B) |
 
 The web app reads every number straight from these contracts. Nothing in the interface is mocked.
 
@@ -144,7 +144,7 @@ Every claim above is covered by tests. Run them:
 
 ```bash
 # contracts
-cargo test                       # 7 tests, 2 crates
+cargo test                       # 9 tests, 2 crates
 stellar contract build           # builds both wasm artifacts
 
 # web
@@ -153,7 +153,7 @@ cd web && pnpm install
 ./node_modules/.bin/next build   # production build
 ```
 
-**Result: 7 passing, 0 failing.**
+**Result: 9 passing, 0 failing.**
 
 | Test | What it proves |
 | --- | --- |
@@ -161,6 +161,8 @@ cd web && pnpm install
 | `combine_is_inverse_of_split` | PT plus YT always recombine into the original asset |
 | `yield_splits_between_two_yt_holders` | yield divides correctly across holders who join at different times and prices |
 | `amm_prices_pt_and_locks_fixed_rate` | the AMM prices PT and discovers the implied fixed rate |
+| `time_decay_pulls_price_to_par` | with no trades, the PT price is pulled to par by maturity and the implied rate stays stable |
+| `carry_vault_locks_fixed_return` | deposit, invest, settle, claim: the vault turns a deposit into a larger payout at maturity |
 | `full_lifecycle_saver_profits_at_maturity` | end to end, a saver locks a rate and redeems more than they paid |
 | `implied_fixed_rate_matches_hand_math` | the on chain rate formula matches hand calculation |
 | `mint_and_transfer` (mock-token) | the SEP-41 test token mints and transfers |

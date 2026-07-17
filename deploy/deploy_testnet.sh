@@ -36,8 +36,8 @@ say "initialize market (maturity=$MATURITY, index=1.0)"
 q "$TOK" -- initialize --admin $ISSUER --underlying $SY --quote $USDC --maturity $MATURITY --index_init $INDEX >/dev/null
 echo "initialized"
 
-SY_SEED=1000000000000      # 100,000 SY (7 decimals)
-USDC_SEED=950000000000     # 95,000 USDC -> pool price 0.95 -> ~5.3% fixed for 180d
+SY_SEED=10000000000000     # 1,000,000 SY (7 decimals), deep pool
+USDC_SEED=9500000000000    # 950,000 USDC -> pool price 0.95 -> ~10.5% APR for 180d
 EXTRA_USDC=5000000000      # 500 USDC demo buying power
 
 say "mint SY + USDC to deployer"
@@ -50,6 +50,13 @@ q "$TOK" -- deposit --user $ISSUER --sy_amt $SY_SEED >/dev/null
 
 say "seed PT/USDC pool at 0.95"
 q "$TOK" -- add_liquidity --provider $ISSUER --pt_in $SY_SEED --quote_in $USDC_SEED >/dev/null
+
+say "seed the carry vault (deposit + invest) so it shows live activity"
+VAULT_SEED=20000000000   # 2,000 USDC
+q "$USDC" -- mint --to $ISSUER --amount $VAULT_SEED >/dev/null
+q "$TOK" -- vault_deposit --user $ISSUER --quote_in $VAULT_SEED >/dev/null
+q "$TOK" -- vault_invest --amount $VAULT_SEED >/dev/null
+echo "vault seeded"
 
 say "simulate a little accrued yield (index 1.0 -> 1.01)"
 q "$TOK" -- sync --new_index 10100000 >/dev/null || true
