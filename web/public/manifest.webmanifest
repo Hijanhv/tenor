@@ -1,0 +1,10 @@
+{
+  "name": "Tenor — fixed rate market for Stellar",
+  "short_name": "Tenor",
+  "description": "Lock a fixed rate or trade the interest rate on Stellar yield.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f6f8fc",
+  "theme_color": "#4F46E5",
+  "icons": [{ "src": "/logo.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #f6f8fc;
+  --card: #ffffff;
+  --line: #e7ecf3;
+  --text: #0b1220;
+  --muted: #64748b;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+.grad-text {
+  background: linear-gradient(100deg, #4f46e5 0%, #06b6d4 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.grad-fill {
+  background: linear-gradient(100deg, #4f46e5 0%, #06b6d4 100%);
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04),
+    0 18px 40px -24px rgba(16, 24, 40, 0.18);
+}
+
+.field {
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+.field:focus-within {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+}
+
+.btn-primary {
+  background: linear-gradient(100deg, #4f46e5 0%, #06b6d4 100%);
+  color: white;
+  transition: filter 0.15s ease, transform 0.05s ease;
+}
+.btn-primary:hover {
+  filter: brightness(1.06);
+}
+.btn-primary:active {
+  transform: translateY(1px);
+}
+.btn-primary:disabled {
+  opacity: 0.5;
+  filter: grayscale(0.2);
+}
+
+.pill {
+  border: 1px solid var(--line);
+  background: #ffffff;
+  border-radius: 999px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.spinner {
+  animation: spin 0.7s linear infinite;
+}
