@@ -95,10 +95,23 @@ export type Market = {
   matured: boolean;
 };
 
+export type Vault = {
+  total_shares: bigint;
+  pt: bigint;
+  idle_quote: bigint;
+  sy: bigint;
+  nav_quote: bigint;
+  settled: boolean;
+};
+
 export const Tenor = {
   marketInfo: () => read<Market>(CONFIG.tokenizer, "market_info"),
   ptPrice: () => read<bigint>(CONFIG.tokenizer, "pt_price"),
   fixedRate: () => read<bigint>(CONFIG.tokenizer, "fixed_rate"),
+  timeProgress: () => read<bigint>(CONFIG.tokenizer, "time_progress"),
+  vaultInfo: () => read<Vault>(CONFIG.tokenizer, "vault_info"),
+  vaultShares: (a: string) =>
+    read<bigint>(CONFIG.tokenizer, "vault_shares", [addr(a)]),
   quoteBuyPt: (quoteIn: bigint) =>
     read<bigint>(CONFIG.tokenizer, "quote_buy_pt", [i128(quoteIn)]),
   ptBalance: (a: string) =>
@@ -125,4 +138,8 @@ export const Tenor = {
     write(CONFIG.tokenizer, "claim_yield", [addr(user)], user),
   redeemPt: (user: string, amt: bigint) =>
     write(CONFIG.tokenizer, "redeem_pt", [addr(user), i128(amt)], user),
+  vaultDeposit: (user: string, quoteIn: bigint) =>
+    write(CONFIG.tokenizer, "vault_deposit", [addr(user), i128(quoteIn)], user),
+  vaultClaim: (user: string) =>
+    write(CONFIG.tokenizer, "vault_claim", [addr(user)], user),
 };
