@@ -20,3 +20,7 @@ dist
 
 # OS
 .DS_Store
+
+# Local-only marketing material (kept out of the public repo)
+assets/DEMO_SCRIPT.md
+assets/twitter/THREAD.md

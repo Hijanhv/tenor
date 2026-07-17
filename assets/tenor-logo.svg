@@ -13,7 +13,6 @@
       <stop offset="1" stop-color="#06B6D4"/>
     </linearGradient>
   </defs>
-  <rect x="2" y="2" width="116" height="116" rx="30" fill="url(#tg)" opacity="0.10"/>
   <path d="M60 104 V78" stroke="url(#tg)" stroke-width="11" stroke-linecap="round"/>
   <path d="M60 78 C60 66 44 66 44 54 M60 78 C60 66 76 66 76 54" stroke="url(#tg)" stroke-width="11" stroke-linecap="round" fill="none"/>
   <path d="M44 54 V24" stroke="url(#tg)" stroke-width="11" stroke-linecap="round"/>

@@ -17,8 +17,6 @@ export function Logo({ size = 40 }: { size?: number }) {
           <stop offset="1" stopColor="#F97316" />
         </linearGradient>
       </defs>
-      {/* soft glow tile so the mark reads as an app icon */}
-      <rect x="6" y="6" width="108" height="108" rx="30" fill="url(#tg)" opacity="0.10" />
       {/* stem */}
       <path d="M60 104 V78" stroke="url(#tg)" strokeWidth="11" strokeLinecap="round" />
       {/* fork */}
