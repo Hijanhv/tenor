@@ -11,6 +11,11 @@
   <img src="https://img.shields.io/badge/license-MIT-64748B" alt="license"/>
 </p>
 
+<p align="center">
+  <b><a href="https://tenor-blond-xi.vercel.app">Live app</a></b> ·
+  <a href="https://stellar.expert/explorer/testnet/contract/CBGCQ7FPK5I2X7FQIUFKEIXMJ6BGZCQAD5KF6JESVFNQ4T6AGC23P3JF">Live contract on testnet</a>
+</p>
+
 ---
 
 ## The problem
