@@ -1,25 +1,20 @@
 <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tenor mark">
   <defs>
-    <linearGradient id="tg" x1="30" y1="14" x2="92" y2="106" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#4F46E5"/>
+    <linearGradient id="tg" x1="28" y1="12" x2="94" y2="108" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2F4BFF"/>
       <stop offset="1" stop-color="#06B6D4"/>
     </linearGradient>
-    <linearGradient id="tgy" x1="72" y1="16" x2="80" y2="60" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#F59E0B"/>
-      <stop offset="1" stop-color="#06B6D4"/>
+    <linearGradient id="tgy" x1="72" y1="14" x2="86" y2="60" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FBBF24"/>
+      <stop offset="1" stop-color="#F97316"/>
     </linearGradient>
   </defs>
-  <!-- rounded tile -->
-  <rect x="4" y="4" width="112" height="112" rx="28" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="2"/>
-  <!-- tuning fork: one stem splitting into two tines = one asset splitting into PT + YT -->
-  <!-- stem -->
-  <path d="M60 104 V78" stroke="url(#tg)" stroke-width="9" stroke-linecap="round"/>
-  <!-- fork base -->
-  <path d="M60 78 C60 66 44 66 44 54 M60 78 C60 66 76 66 76 54" stroke="url(#tg)" stroke-width="9" stroke-linecap="round" fill="none"/>
-  <!-- left tine: PT — straight, stable, capped at par -->
-  <path d="M44 54 V24" stroke="url(#tg)" stroke-width="9" stroke-linecap="round"/>
-  <circle cx="44" cy="18" r="6" fill="#4F46E5"/>
-  <!-- right tine: YT — rises like a yield curve, arrow up -->
-  <path d="M76 54 C76 42 70 40 76 30 C80 24 82 26 84 20" stroke="url(#tgy)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  <path d="M78 18 L84 15 L86 21 Z" fill="#F59E0B"/>
+  <rect x="2" y="2" width="116" height="116" rx="30" fill="url(#tg)" opacity="0.10"/>
+  <rect x="2.5" y="2.5" width="115" height="115" rx="29.5" fill="none" stroke="#2F4BFF" stroke-opacity="0.18"/>
+  <path d="M60 104 V78" stroke="url(#tg)" stroke-width="11" stroke-linecap="round"/>
+  <path d="M60 78 C60 66 44 66 44 54 M60 78 C60 66 76 66 76 54" stroke="url(#tg)" stroke-width="11" stroke-linecap="round" fill="none"/>
+  <path d="M44 54 V24" stroke="url(#tg)" stroke-width="11" stroke-linecap="round"/>
+  <circle cx="44" cy="17" r="7" fill="#2F4BFF"/>
+  <path d="M76 54 C76 42 70 40 76 30 C80 24 82 26 84 20" stroke="url(#tgy)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M77 17 L85 13 L87 21 Z" fill="#F97316"/>
 </svg>

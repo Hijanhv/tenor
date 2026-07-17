@@ -12,11 +12,11 @@ function GitHubIcon() {
 
 export function Nav({ launch = true }: { launch?: boolean }) {
   return (
-    <header className="sticky top-0 z-30 border-b border-[var(--line)] bg-[var(--bg)]/80 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3">
-        <Link href="/" className="flex items-center gap-2">
-          <Logo />
-          <span className="text-xl font-bold tracking-tight">Tenor</span>
+    <header className="sticky top-0 z-30 border-b border-[var(--line)] bg-[var(--bg)]/95 backdrop-blur-md">
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-2.5">
+        <Link href="/" className="flex items-center gap-2.5">
+          <Logo size={44} />
+          <span className="text-2xl font-bold tracking-tight">Tenor</span>
           <span className="pill ml-1 px-2 py-0.5 text-[11px] font-medium text-[var(--muted)]">Testnet</span>
         </Link>
         <nav className="hidden items-center gap-7 text-sm font-medium text-[var(--muted)] sm:flex">
