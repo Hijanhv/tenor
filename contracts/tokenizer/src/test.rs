@@ -4,7 +4,10 @@ use super::*;
 use soroban_sdk::testutils::{Address as _, Ledger};
 use soroban_sdk::{token, Address, Env};
 
-fn setup_sy(env: &Env, admin: &Address) -> (Address, token::StellarAssetClient<'static>, token::TokenClient<'static>) {
+fn new_token(
+    env: &Env,
+    admin: &Address,
+) -> (Address, token::StellarAssetClient<'static>, token::TokenClient<'static>) {
     let sac = env.register_stellar_asset_contract_v2(admin.clone());
     let addr = sac.address();
     (
@@ -13,6 +16,8 @@ fn setup_sy(env: &Env, admin: &Address) -> (Address, token::StellarAssetClient<'
         token::TokenClient::new(env, &addr),
     )
 }
+
+const YEAR: u64 = 31_536_000;
 
 #[test]
 fn split_accrue_claim_redeem() {
@@ -24,13 +29,13 @@ fn split_accrue_claim_redeem() {
     let alice = Address::generate(&env);
 
     // SY = a yield-bearing underlying (e.g. a Blend pool token). Value tracked by the index.
-    let (sy, sy_admin, sy_token) = setup_sy(&env, &admin);
+    let (sy, sy_admin, sy_token) = new_token(&env, &admin);
     sy_admin.mint(&alice, &1_000);
 
-    // Market: index starts at 1.0 (1e7), matures at t=2000.
+    // Market: index starts at 1.0 (1e7), matures at t=2000. Quote token unused here.
     let market = env.register(Tenor, ());
     let c = TenorClient::new(&env, &market);
-    c.initialize(&admin, &sy, &2_000u64, &SCALE);
+    c.initialize(&admin, &sy, &sy, &2_000u64, &SCALE);
 
     // Alice splits 1000 SY -> 1000 PT + 1000 YT (asset units, index = 1.0).
     let notional = c.deposit(&alice, &1_000);
@@ -54,9 +59,6 @@ fn split_accrue_claim_redeem() {
     let redeemed_sy = c.redeem_pt(&alice, &1_000);
     assert_eq!(redeemed_sy, 1_000 * SCALE / (SCALE * 11 / 10)); // 909
     assert_eq!(c.pt_balance(&alice), 0);
-
-    // Alice holds ~999 SY back (90 yield + 909 principal) from 1000 in — plus 10% growth,
-    // the yield having been split out to the YT leg. Principal was preserved in asset terms.
     assert_eq!(sy_token.balance(&alice), 90 + 909);
 }
 
@@ -66,18 +68,14 @@ fn combine_is_inverse_of_split() {
     env.mock_all_auths();
     let admin = Address::generate(&env);
     let bob = Address::generate(&env);
-    let (sy, sy_admin, sy_token) = setup_sy(&env, &admin);
+    let (sy, sy_admin, sy_token) = new_token(&env, &admin);
     sy_admin.mint(&bob, &500);
 
     let market = env.register(Tenor, ());
     let c = TenorClient::new(&env, &market);
-    c.initialize(&admin, &sy, &9_999u64, &SCALE);
+    c.initialize(&admin, &sy, &sy, &9_999u64, &SCALE);
 
     c.deposit(&bob, &500);
-    assert_eq!(c.pt_balance(&bob), 500);
-    assert_eq!(c.yt_balance(&bob), 500);
-
-    // PT + YT recombine back into the original SY at any time.
     let out = c.combine(&bob, &500);
     assert_eq!(out, 500);
     assert_eq!(c.pt_balance(&bob), 0);
@@ -92,13 +90,13 @@ fn yield_splits_between_two_yt_holders() {
     let admin = Address::generate(&env);
     let a = Address::generate(&env);
     let b = Address::generate(&env);
-    let (sy, sy_admin, _) = setup_sy(&env, &admin);
+    let (sy, sy_admin, _) = new_token(&env, &admin);
     sy_admin.mint(&a, &1_000);
     sy_admin.mint(&b, &1_000);
 
     let market = env.register(Tenor, ());
     let c = TenorClient::new(&env, &market);
-    c.initialize(&admin, &sy, &99_999u64, &SCALE);
+    c.initialize(&admin, &sy, &sy, &99_999u64, &SCALE);
 
     c.deposit(&a, &1_000); // A: 1000 YT (index 1.0)
     c.sync(&(SCALE * 105 / 100)); // +5%: 50 yield, A is sole YT holder => all 50 to A
@@ -108,8 +106,42 @@ fn yield_splits_between_two_yt_holders() {
     // A = 50 (first tranche alone) + 1000/2050 * 100 = 98 ; B = 1050/2050 * 100 = 51
     assert_eq!(c.pending_yield(&a), 98);
     assert_eq!(c.pending_yield(&b), 51);
-    // 149 of the 150 total distributed; 1 unit lost to integer rounding (dust stays in vault).
     assert_eq!(c.pending_yield(&a) + c.pending_yield(&b), 149);
+}
+
+#[test]
+fn amm_prices_pt_and_locks_fixed_rate() {
+    let env = Env::default();
+    env.mock_all_auths();
+    env.ledger().set_timestamp(1_000);
+    let admin = Address::generate(&env);
+    let lp = Address::generate(&env);
+    let buyer = Address::generate(&env);
+
+    let (sy, sy_admin, _) = new_token(&env, &admin);
+    let (usdc, usdc_admin, _) = new_token(&env, &admin);
+
+    let market = env.register(Tenor, ());
+    let c = TenorClient::new(&env, &market);
+    c.initialize(&admin, &sy, &usdc, &(1_000 + YEAR), &SCALE);
+
+    // LP mints PT by splitting SY, then seeds a PT/USDC pool at 0.95 (100k PT : 95k USDC).
+    sy_admin.mint(&lp, &100_000);
+    c.deposit(&lp, &100_000);
+    usdc_admin.mint(&lp, &95_000);
+    let lp_shares = c.add_liquidity(&lp, &100_000, &95_000);
+    assert_eq!(lp_shares, 100_000); // seed => LP shares == pt seeded
+
+    // PT spot price is 0.95 => the pool implies a ~5.26% fixed rate for a 1-year tenor.
+    assert_eq!(c.pt_price(), 9_500_000);
+    let rate = c.fixed_rate();
+    assert!(rate > 500_000 && rate < 560_000, "fixed rate was {}", rate);
+
+    // A saver locks the fixed rate: 500 USDC buys > 500 PT (each PT redeems for 1.0 at maturity).
+    usdc_admin.mint(&buyer, &500);
+    let pt_out = c.buy_pt(&buyer, &500);
+    assert!(pt_out > 515 && pt_out < 530, "pt_out was {}", pt_out);
+    assert_eq!(c.pt_balance(&buyer), pt_out);
 }
 
 #[test]
@@ -120,6 +152,5 @@ fn implied_fixed_rate_matches_hand_math() {
     // PT priced at 0.95 with ~half a year left => ~ (1/0.95 - 1) * 2 ≈ 10.5% APR.
     let half_year: u64 = 15_768_000;
     let rate = c.implied_fixed_rate(&(SCALE * 95 / 100), &half_year);
-    // (1/0.95 - 1) = 0.05263 ; *2 = 0.10526 -> 1_052_631 (1e7-scaled)
     assert!(rate > 1_040_000 && rate < 1_060_000, "rate was {}", rate);
 }
