@@ -1,13 +1,13 @@
 #![no_std]
-//! Tenor — yield tokenization for Stellar (the interest-rate primitive Soroban is missing).
+//! Tenor, yield tokenization for Stellar (the interest-rate primitive Soroban is missing).
 //!
-//! A `market` wraps ONE yield-bearing underlying ("SY" — standardized yield token, e.g. a
+//! A `market` wraps ONE yield-bearing underlying ("SY", standardized yield token, e.g. a
 //! Blend pool token, a DeFindex vault share, or a tokenized T-bill like USDY) with a fixed
 //! `maturity`. Depositing SY mints two tokens, both denominated in the underlying *asset*:
 //!
-//!   * PT (Principal Token) — redeemable 1:1 for asset value at maturity. Bought at a
+//!   * PT (Principal Token), redeemable 1:1 for asset value at maturity. Bought at a
 //!     discount before maturity => a locked-in FIXED RATE.
-//!   * YT (Yield Token)      — streams all yield the SY earns until maturity. Long/short YIELD.
+//!   * YT (Yield Token), streams all yield the SY earns until maturity. Long/short YIELD.
 //!
 //! Invariant:  PT(x) + YT(x)  ==  x asset units of SY  (they can always be recombined).
 //!
@@ -262,7 +262,7 @@ impl Tenor {
         minted
     }
 
-    /// Buy PT with `quote_in` of the stable token — this LOCKS A FIXED RATE.
+    /// Buy PT with `quote_in` of the stable token, this LOCKS A FIXED RATE.
     pub fn buy_pt(env: Env, buyer: Address, quote_in: i128) -> i128 {
         buyer.require_auth();
         if quote_in <= 0 {

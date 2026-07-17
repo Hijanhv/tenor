@@ -1,6 +1,6 @@
 #![no_std]
 //! Minimal SEP-41 token for Tenor demos: mintable by anyone (faucet-style) so a fresh
-//! wallet can grab test USDC / test SY with no trustlines. Testnet only — not for prod.
+//! wallet can grab test USDC / test SY with no trustlines. Testnet only, not for prod.
 
 use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, String};
 
@@ -33,7 +33,7 @@ impl MockToken {
         s.set(&DataKey::Symbol, &symbol);
     }
 
-    /// Faucet mint — open by design for testnet demos.
+    /// Faucet mint, open by design for testnet demos.
     pub fn mint(env: Env, to: Address, amount: i128) {
         write_balance(&env, &to, read_balance(&env, &to) + amount);
     }

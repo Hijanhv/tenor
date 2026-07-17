@@ -2,87 +2,194 @@
   <img src="assets/tenor-logo.svg" alt="Tenor" width="380"/>
 </p>
 
-# Tenor — the fixed-rate market Stellar is missing
+<p align="center"><b>The fixed rate market for Stellar.</b> Split any yield bearing asset into a Principal token and a Yield token. Lock a guaranteed return, or trade the interest rate on its own.</p>
 
-> Yield tokenization for Soroban. Split any yield‑bearing Stellar asset into **Principal (PT)** and **Yield (YT)** tokens — lock in a **fixed rate**, or trade the **interest rate** itself. "Pendle for Stellar."
-
-<p align="center"><em>Turn Stellar's floating, unpredictable yields into predictable, tradable ones.</em></p>
+<p align="center">
+  <img src="https://img.shields.io/badge/network-Stellar%20Testnet-4F46E5" alt="testnet"/>
+  <img src="https://img.shields.io/badge/contracts-Soroban%20(Rust)-06B6D4" alt="soroban"/>
+  <img src="https://img.shields.io/badge/tests-7%20passing-16a34a" alt="tests"/>
+  <img src="https://img.shields.io/badge/license-MIT-64748B" alt="license"/>
+</p>
 
 ---
 
 ## The problem
 
-Stellar DeFi now has real yield — Blend lending pools, DeFindex vaults, tokenized T‑bills like USDY. RWA + TVL grew **~118%+ in 2025**. But **every yield on Stellar today is floating and unpredictable**, and the public DeFi directory has *zero* fixed‑rate, yield‑tokenization, options, or structured‑products protocols. That entire interest‑rate layer of DeFi — the layer serious and institutional capital needs — is empty.
+Stellar DeFi finally has real yield. Blend runs lending pools, DeFindex packages vault strategies, and tokenized treasuries like USDY bring government backed yield on chain. Real world assets and total value locked grew more than 100 percent in 2025.
 
-Floating‑only yield is exactly what blocks predictable savings and institutional RWA flows. Fixed‑rate DeFi ("Pendle") is the defining 2026 DeFi narrative. **It doesn't exist on Stellar. Tenor is that primitive.**
+Every bit of that yield is floating. A saver who parks stablecoins in a lending pool has no idea what the rate will be next week. It could be 8 percent today and 3 percent next month. There is no way to lock a rate, no way to buy a guaranteed return, and no way to take a view on where rates are going.
 
-## What Tenor does
+Look at the public Stellar DeFi directory and you find exchanges, lending, and collateralized debt. You find no fixed rate market, no yield tokenization, no interest rate products of any kind. The entire interest rate layer of DeFi, the layer that serious savers and institutions actually need, is empty. Floating only yield is the single biggest reason predictable savings and large real world asset flows stay off Stellar.
 
-Take a yield‑bearing asset (an "SY" — e.g. a Blend pool token) and a maturity date. Tenor splits it into two tradable tokens:
+## The solution
 
-| Token | Redeems for | Use |
+Tenor is that missing layer. It takes any yield bearing asset and a maturity date and splits the asset into two tokens that trade on their own.
+
+| Token | Redeems for | Who wants it |
 | --- | --- | --- |
-| **PT** – Principal Token | exactly `1` unit of the asset **at maturity** | Buy at a discount today → **lock a fixed rate** ("earn a guaranteed 7.5% for 1yr") |
-| **YT** – Yield Token | **all the yield** the SY earns until maturity | **Go long / short the interest rate** — a pure rates trade |
+| **PT**, the principal token | exactly 1.00 of the asset at maturity | savers who want a guaranteed, fixed return |
+| **YT**, the yield token | all the yield the asset earns until maturity | traders who want to go long or short the rate |
 
-**Invariant:** `PT(x) + YT(x) == x` units of the underlying asset. They can always be recombined.
+One rule ties them together: `PT(x) + YT(x) = x`. You can always recombine them back into the original asset. A principal token bought below 1.00 today and worth 1.00 at maturity is a locked fixed rate. A yield token is a pure bet on the interest rate.
+
+<p align="center">
+  <img src="assets/quant-carry.svg" alt="Fixed rate carry: PT converges to par by maturity" width="620"/>
+</p>
+
+## Our approach
+
+Three layers, each small and composable, built so the rest of Stellar plugs straight in.
+
+1. **Tokenizer.** The core engine. Deposit a yield bearing asset, get equal PT and YT. Yield streams to YT holders using an accumulator so it splits correctly no matter when people join or leave. Principal redeems at maturity. This is the primitive.
+2. **Rate AMM.** A constant product pool prices PT against a stable token. The pool price is the market's view of the fixed rate, and it moves as supply and demand change. Buying PT here is how a saver locks a rate.
+3. **Strategy.** A systematic fixed rate carry that buys the cheapest principal and holds it to maturity, turning the discount into a booked return.
+
+A saver never has to understand any of this. They see one number, the fixed rate, type an amount, and lock it in a couple of clicks.
+
+## Technical architecture
+
+```mermaid
+flowchart LR
+  subgraph SRC[Yield sources on Stellar]
+    A[Blend pool token]
+    B[DeFindex vault share]
+    C[USDY tokenized T-bill]
+  end
+  SRC -->|deposit SY| TK[Tenor Tokenizer]
+  RF[Reflector oracle] -->|SY to asset index| TK
+  TK -->|mint| PT[PT, principal]
+  TK -->|mint| YT[YT, yield]
+  PT --> AMM[Rate AMM, PT / USDC]
+  AMM --> RATE[Implied fixed rate]
+  PT --> SAVERS[Savers lock a fixed rate]
+  YT --> TRADERS[Traders long or short yield]
+  AMM --> LPS[LPs earn swap fees]
+  PT -.recombine.-> TK
+  YT -.recombine.-> TK
+```
+
+**Contracts (Soroban, Rust, `soroban-sdk` 26)**
+
+- `contracts/tokenizer` carries the whole protocol: split and recombine, redeem at maturity, the yield accumulator for YT, and the built in PT rate AMM. Public entry points: `initialize`, `sync`, `deposit`, `combine`, `redeem_pt`, `claim_yield`, `transfer_pt`, `transfer_yt`, `add_liquidity`, `buy_pt`, `sell_pt`, `pt_price`, `fixed_rate`, `quote_buy_pt`, `pending_yield`, `market_info`.
+- `contracts/mock-token` is a small SEP-41 token used for the testnet demo so a fresh wallet can mint test USDC and test yield asset with no trustlines.
+
+**Live on Stellar Testnet**
+
+| Piece | Contract id |
+| --- | --- |
+| Tokenizer + Rate AMM | [`CBGCQ7FP…GC23P3JF`](https://stellar.expert/explorer/testnet/contract/CBGCQ7FPK5I2X7FQIUFKEIXMJ6BGZCQAD5KF6JESVFNQ4T6AGC23P3JF) |
+| Test yield asset (TSY) | [`CBBVICQ3…TESNBI5R`](https://stellar.expert/explorer/testnet/contract/CBBVICQ3UNMK5Q7BROPX6KBEHJBUOK7SILMJE3AHPWP56KC7TESNBI5R) |
+| Test USDC | [`CDYVZXXZ…GNZ3IC5P`](https://stellar.expert/explorer/testnet/contract/CDYVZXXZET5XETCLZJ65M2YXGYXXTO76QTEQFFEITAAMVKNPGNZ3IC5P) |
+
+The web app reads every number straight from these contracts. Nothing in the interface is mocked.
+
+## The quant strategy: fixed rate carry
+
+The strategy that turns the primitive into a product is a classic fixed income carry, adapted to on chain principal tokens.
+
+A principal token pays 1.00 of the asset at maturity and nothing before. So it trades at a discount, say 0.95. Hold it to maturity and it pays 1.00. That 0.05 of pull to par is not luck and not a guess. It is contractually fixed the moment you buy, because redemption is fixed by the contract. Buy low, hold, redeem at par, book the spread.
+
+```mermaid
+flowchart LR
+  U[USDC today] -->|buy PT below par| P["PT at 0.95"]
+  P -->|hold to maturity, no action needed| M["PT pulls to 1.00"]
+  M -->|redeem in the contract| R["principal + locked gain"]
+  RATE["fixed_rate() prices the annualized return on chain"] -.marks.-> P
+```
+
+**The math, on chain.** The contract turns a PT price into an annualized fixed rate:
 
 ```
-                          ┌── PT ──►  fixed-rate savers  (buy discount → lock rate)
-  yield-bearing asset ──► split
-     (Blend / USDY /       └── YT ──►  yield traders      (long/short the rate)
-      DeFindex share)
-                          PT/YT trade on the Tenor rate AMM → implied fixed-rate curve
+fixed_rate = (1 / pt_price - 1) * (seconds_per_year / seconds_to_maturity)
 ```
 
-Three layers:
-1. **Tokenizer** — the core primitive: split / recombine / redeem, and stream yield to YT holders (MasterChef accumulator). ✅ built & tested
-2. **Rate AMM** — trade PT/YT and discover the implied fixed rate. 🚧
-3. **Products** — a one‑tap "earn fixed X%" savings vault, a long/short‑yield screen, and a systematic **fixed‑rate carry** strategy vault. 🚧
+At a 0.95 price with 180 days left, that is a 5.26 percent return over the tenor, about 10.7 percent annualized. `implied_fixed_rate` and `fixed_rate` compute this inside the contract, so the rate is not a frontend guess, it is read from chain.
 
-## Why it composes the whole ecosystem
+**Why it is safe.** The return does not depend on where floating rates go, on liquidations, or on a counterparty paying you. Once you hold the principal token, the payout at maturity is fixed by the contract. The yield risk was sold off to the yield token holder. This is the same structure that makes zero coupon bonds the base building block of fixed income, now permissionless and composable.
 
-Tenor is a **primitive**, not an app — it makes *other* protocols more useful:
+## Why people will use it
 
-- **Blend / DeFindex** pool tokens → become fixed‑rate instruments
-- **USDY & tokenized T‑bills** → get an on‑chain fixed‑rate market
-- **Reflector** → feeds the SY→asset exchange rate / marks
-- **Soroswap** → PT/YT are tradable assets (roadmap: SEP‑41 wrap)
+- **Savers** get a real fixed rate on dollars. Lock a number and stop watching floating APYs.
+- **Yield traders** get the first clean way to express a view on Stellar interest rates. Long the yield token if you think rates rise, sell it if you think they fall.
+- **Liquidity providers** earn swap fees on a market that did not exist before.
+- **Treasuries and real world asset issuers** finally get predictable, hedgeable returns, which is the precondition for moving size on chain.
 
-## Repo structure
+## Why it beats what exists today
 
-```
-tenor/
-├── contracts/
-│   └── tokenizer/     # Soroban (Rust) — core yield-tokenization engine  ✅
-├── web/               # Next.js PWA — the "lock a fixed rate" app          🚧
-└── README.md
-```
+| | Floating lending (Blend, pools) | Bank certificate of deposit | **Tenor** |
+| --- | --- | --- | --- |
+| Rate is known upfront | No | Yes | **Yes** |
+| Permissionless, global | Yes | No | **Yes** |
+| Settles in seconds, low fees | Yes | No | **Yes** |
+| Can trade the yield separately | No | No | **Yes** |
+| Composable with other DeFi | Partly | No | **Yes** |
+| Exists on Stellar | Yes | n/a | **Only here** |
 
-## Contracts — status
+Holding a yield stablecoin still leaves you exposed to a variable rate. A certificate of deposit is fixed but permissioned, slow, and locked in one institution. Tenor gives the fixed rate of a bond product with the openness, speed, and composability of Stellar.
 
-The tokenizer core is implemented and tested (soroban‑sdk 26):
+## Why Stellar needs this
 
-`initialize · sync · deposit · combine · redeem_pt · claim_yield · transfer_pt · transfer_yt · pending_yield · implied_fixed_rate · market_info`
+Stellar is betting on real world assets and stablecoin yield, and that bet grew more than 100 percent last year. But real world asset capital does not move for floating, unpredictable returns. It moves for fixed rates it can model and hedge. Stellar has the yield bearing assets and none of the rate infrastructure to make them usable at scale.
+
+Tenor is a primitive, not another app, so it lifts the whole ecosystem. It turns Blend positions, DeFindex shares, and tokenized treasuries into fixed rate instruments, gives them a yield market, and deepens liquidity across all of them. It composes with Reflector for marks and with any DEX for PT and YT trading. Filling the empty interest rate layer is one of the highest leverage things that can be built on Stellar right now, and it is exactly the kind of financial primitive the ecosystem is asking for.
+
+## Testing
+
+Every claim above is covered by tests. Run them:
 
 ```bash
-cd contracts/tokenizer
-cargo test          # split, accrue+claim+redeem, combine, multi-YT split, implied rate
-stellar contract build
+# contracts
+cargo test                       # 7 tests, 2 crates
+stellar contract build           # builds both wasm artifacts
+
+# web
+cd web && pnpm install
+./node_modules/.bin/tsc --noEmit # typecheck
+./node_modules/.bin/next build   # production build
 ```
 
-> Build note: pin `ed25519-dalek` to 2.2.0 (`cargo update -p ed25519-dalek@3.0.0 --precise 2.2.0`) — newer 3.0.0 breaks `soroban-env-host` testutils.
+**Result: 7 passing, 0 failing.**
 
-## Roadmap (hackathon build)
+| Test | What it proves |
+| --- | --- |
+| `split_accrue_claim_redeem` | deposit splits into PT and YT, yield accrues to YT, claim and maturity redemption pay out correctly |
+| `combine_is_inverse_of_split` | PT plus YT always recombine into the original asset |
+| `yield_splits_between_two_yt_holders` | yield divides correctly across holders who join at different times and prices |
+| `amm_prices_pt_and_locks_fixed_rate` | the AMM prices PT and discovers the implied fixed rate |
+| `full_lifecycle_saver_profits_at_maturity` | end to end, a saver locks a rate and redeems more than they paid |
+| `implied_fixed_rate_matches_hand_math` | the on chain rate formula matches hand calculation |
+| `mint_and_transfer` (mock-token) | the SEP-41 test token mints and transfers |
 
-- [x] Yield‑tokenization core (PT/YT split, yield streaming, redemption)
-- [x] Implied fixed‑rate math
-- [ ] Rate AMM (PT/USDC pool + implied‑rate curve)
-- [ ] Mock yield‑bearing SY vault for a self‑driving demo
-- [ ] Next.js PWA — fixed‑rate savings + yield trading + portfolio
-- [ ] Testnet deployment + explorer links
-- [ ] Fixed‑rate carry strategy vault
-- [ ] Demo video
+Beyond unit tests, the deployment is verified live: the web client reads `market_info`, `pt_price`, and `fixed_rate` directly from the testnet contract, and the production web build passes with no type errors.
+
+## Running it
+
+```bash
+# 1. build and test contracts
+cargo test && stellar contract build
+
+# 2. deploy to your own testnet market (optional, a live one already exists)
+./deploy/deploy_testnet.sh
+
+# 3. run the app
+cd web && pnpm install && pnpm dev
+```
+
+The app connects to Freighter. Switch Freighter to the Test network, use the in app faucet to get test tokens, then lock a fixed rate.
+
+> Build note: if `cargo test` fails compiling `soroban-env-host`, pin the crypto dep with `cargo update -p ed25519-dalek@3.0.0 --precise 2.2.0`. A newer 3.0.0 breaks the host test utilities.
+
+## References
+
+- Stellar Community Fund 2025 impact report, on what the ecosystem funds and where growth is: https://medium.com/stellar-community/stellar-community-fund-2025-impact-report-6f6c6361aaca
+- Stellar DeFi protocol directory, showing the categories that exist today: https://stellarplaybook.com/defi-on-stellar/defi-directory/
+- Stellar, DeFi and real world assets on the network: https://stellar.org/blog/ecosystem/what-the-defi-is-happening-on-stellar
+- Reflector, the Stellar price and rate oracle: https://reflector.network/docs
+- Blend lending protocol: https://www.blend.capital
+- DeFindex vault strategies: https://defindex.io
+- Pendle, the yield tokenization model this generalizes to Stellar: https://www.pendle.finance
+- Soroban smart contract docs: https://developers.stellar.org/docs/build/smart-contracts
+- SEP-41 token interface: https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0041.md
 
 ## License
 

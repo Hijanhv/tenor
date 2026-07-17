@@ -144,6 +144,49 @@ fn amm_prices_pt_and_locks_fixed_rate() {
     assert_eq!(c.pt_balance(&buyer), pt_out);
 }
 
+/// End to end: a saver locks a fixed rate and, at maturity, redeems principal worth
+/// more than they paid. This is the outcome the whole protocol promises.
+#[test]
+fn full_lifecycle_saver_profits_at_maturity() {
+    let env = Env::default();
+    env.mock_all_auths();
+    env.ledger().set_timestamp(1_000);
+    let admin = Address::generate(&env);
+    let lp = Address::generate(&env);
+    let saver = Address::generate(&env);
+
+    let (sy, sy_admin, sy_token) = new_token(&env, &admin);
+    let (usdc, usdc_admin, _) = new_token(&env, &admin);
+
+    let market = env.register(Tenor, ());
+    let c = TenorClient::new(&env, &market);
+    c.initialize(&admin, &sy, &usdc, &(1_000 + YEAR), &SCALE);
+
+    // LP seeds the market: split 100k SY, pool 100k PT : 95k USDC (price 0.95).
+    sy_admin.mint(&lp, &100_000);
+    c.deposit(&lp, &100_000);
+    usdc_admin.mint(&lp, &95_000);
+    c.add_liquidity(&lp, &100_000, &95_000);
+
+    // Saver locks the fixed rate with 950 USDC.
+    usdc_admin.mint(&saver, &950);
+    let pt = c.buy_pt(&saver, &950);
+    assert!(pt > 950, "should receive more PT than USDC paid; got {}", pt);
+
+    // The SY earns yield over the tenor (index 1.0 -> 1.05); that accrues to YT (the LP).
+    c.sync(&(SCALE * 105 / 100));
+    assert!(c.pending_yield(&lp) > 0);
+
+    // At maturity the saver redeems PT. Principal value redeemed = pt asset units,
+    // which is worth more than the 950 USDC paid: the fixed rate realized.
+    env.ledger().set_timestamp(1_000 + YEAR + 1);
+    let sy_out = c.redeem_pt(&saver, &pt);
+    let asset_value = sy_out * (SCALE * 105 / 100) / SCALE; // SY -> asset at final index
+    assert!(asset_value >= pt - 1, "redeemed value {} < principal {}", asset_value, pt);
+    assert!(asset_value > 950, "saver did not profit: {} <= 950", asset_value);
+    assert_eq!(sy_token.balance(&saver), sy_out);
+}
+
 #[test]
 fn implied_fixed_rate_matches_hand_math() {
     let env = Env::default();

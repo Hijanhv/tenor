@@ -1,0 +1,42 @@
+<svg width="640" height="300" viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg" fill="none" role="img" aria-label="Fixed rate carry: PT converges to par by maturity">
+  <defs>
+    <linearGradient id="cg" x1="70" y1="240" x2="590" y2="60" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4F46E5"/>
+      <stop offset="1" stop-color="#06B6D4"/>
+    </linearGradient>
+    <linearGradient id="area" x1="0" y1="60" x2="0" y2="240" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4F46E5" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#4F46E5" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="640" height="300" rx="18" fill="#F8FAFC"/>
+  <text x="36" y="42" font-family="Inter,Arial,sans-serif" font-size="18" font-weight="700" fill="#0B1220">Fixed rate carry</text>
+  <text x="36" y="64" font-family="Inter,Arial,sans-serif" font-size="12.5" fill="#64748B">Buy the principal token below par. It climbs to 1.00 by maturity. That climb is the locked return.</text>
+
+  <!-- axes -->
+  <line x1="70" y1="240" x2="600" y2="240" stroke="#CBD5E1" stroke-width="1.2"/>
+  <line x1="70" y1="90" x2="70" y2="240" stroke="#CBD5E1" stroke-width="1.2"/>
+  <line x1="70" y1="90" x2="600" y2="90" stroke="#E2E8F0" stroke-dasharray="4 4"/>
+  <text x="30" y="94" font-family="Inter,Arial" font-size="11" fill="#94A3B8">1.00</text>
+  <text x="30" y="228" font-family="Inter,Arial" font-size="11" fill="#94A3B8">0.95</text>
+  <text x="74" y="258" font-family="Inter,Arial" font-size="11" fill="#94A3B8">buy today</text>
+  <text x="520" y="258" font-family="Inter,Arial" font-size="11" fill="#94A3B8">maturity</text>
+
+  <!-- filled area under the convergence curve -->
+  <path d="M70 224 C220 208 400 140 590 92 L590 240 L70 240 Z" fill="url(#area)"/>
+
+  <!-- the convergence curve, drawn in -->
+  <path d="M70 224 C220 208 400 140 590 92" fill="none" stroke="url(#cg)" stroke-width="4" stroke-linecap="round" stroke-dasharray="640" stroke-dashoffset="640">
+    <animate attributeName="stroke-dashoffset" from="640" to="0" dur="2.6s" repeatCount="indefinite"/>
+  </path>
+
+  <!-- moving marker -->
+  <circle r="6" fill="#06B6D4" stroke="#fff" stroke-width="2">
+    <animateMotion dur="2.6s" repeatCount="indefinite" path="M70 224 C220 208 400 140 590 92"/>
+  </circle>
+
+  <!-- par target -->
+  <circle cx="590" cy="92" r="5" fill="#4F46E5"/>
+  <text x="470" y="82" font-family="Inter,Arial" font-size="12" font-weight="600" fill="#4F46E5">redeems at 1.00</text>
+</svg>

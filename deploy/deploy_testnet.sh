@@ -76,5 +76,5 @@ JSON
 )
 echo "$JSON" | tee deploy/testnet.json web/deployment.json >/dev/null
 
-say "DONE — deploy/testnet.json written"
+say "DONE, deploy/testnet.json written"
 cat deploy/testnet.json

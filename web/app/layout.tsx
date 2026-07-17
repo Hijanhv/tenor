@@ -5,7 +5,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  title: "Tenor — the fixed rate market for Stellar",
+  title: "Tenor, the fixed rate market for Stellar",
   description:
     "Split any yield bearing Stellar asset into Principal and Yield tokens. Lock a fixed rate or trade the interest rate itself.",
   manifest: "/manifest.webmanifest",
