@@ -13,6 +13,7 @@ export const CONFIG = {
   // simulations (no signature, no fees, nothing is submitted).
   readSource: deployment.issuer,
   github: "https://github.com/Hijanhv/tenor",
+  twitter: "https://x.com/tenor_stellar",
   explorer: (id: string) =>
     `https://stellar.expert/explorer/testnet/contract/${id}`,
   account: (id: string) =>

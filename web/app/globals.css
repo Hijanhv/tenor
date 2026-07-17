@@ -44,7 +44,7 @@ body {
   color: transparent;
 }
 .grad-fill {
-  background: linear-gradient(100deg, var(--brand-1) 0%, var(--brand-2) 100%);
+  background: linear-gradient(105deg, #2f4bff 0%, #7c3aed 48%, #06b6d4 100%);
 }
 
 .card {
@@ -72,21 +72,24 @@ body {
 }
 
 .btn-primary {
-  background: linear-gradient(100deg, var(--brand-1) 0%, var(--brand-2) 100%);
+  background: linear-gradient(105deg, #2f4bff 0%, #7c3aed 48%, #06b6d4 100%);
   color: white;
-  box-shadow: 0 10px 24px -10px rgba(47, 75, 255, 0.6);
+  box-shadow: 0 12px 26px -10px rgba(47, 75, 255, 0.65);
   transition: filter 0.15s ease, transform 0.05s ease, box-shadow 0.15s ease;
 }
 .btn-primary:hover {
-  filter: brightness(1.08);
-  box-shadow: 0 14px 30px -10px rgba(47, 75, 255, 0.7);
+  filter: saturate(1.1) brightness(1.06);
+  box-shadow: 0 16px 34px -10px rgba(47, 75, 255, 0.8);
 }
 .btn-primary:active {
   transform: translateY(1px);
 }
+/* disabled reads as a clear muted state, not a washed out blue */
 .btn-primary:disabled {
-  opacity: 0.45;
+  background: #e9e1d6;
+  color: #a89a89;
   box-shadow: none;
+  cursor: not-allowed;
 }
 
 .btn-ghost {

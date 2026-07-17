@@ -471,8 +471,14 @@ impl Tenor {
         set_i128(&env, &DataKey::VaultTotalShares, total - shares);
         set_i128(&env, &DataKey::VaultSy, sy_total - sy_out);
         set_i128(&env, &DataKey::VaultQuote, quote_total - quote_out);
+        // Transfer SY directly. TotalSy was already reduced in vault_settle when the vault's
+        // PT was redeemed, so we must not reduce it again here (that would double count).
         if sy_out > 0 {
-            payout_sy(&env, &user, sy_out);
+            token::TokenClient::new(&env, &underlying(&env)).transfer(
+                &env.current_contract_address(),
+                &user,
+                &sy_out,
+            );
         }
         if quote_out > 0 {
             token::TokenClient::new(&env, &quote(&env)).transfer(

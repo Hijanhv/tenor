@@ -261,6 +261,14 @@ fn carry_vault_locks_fixed_return() {
     assert!(got > 950, "saver did not profit from carry: {}", got);
     assert_eq!(sy_token.balance(&saver), got);
     assert_eq!(c.vault_shares(&saver), 0);
+
+    // Accounting integrity: the market's TotalSy must equal the real SY still held by
+    // the contract. A double count in claim would break this (and later YT yield).
+    assert_eq!(
+        c.market_info().total_sy,
+        sy_token.balance(&market),
+        "TotalSy must match real SY balance after a vault cycle"
+    );
 }
 
 #[test]

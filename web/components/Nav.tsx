@@ -10,6 +10,14 @@ function GitHubIcon() {
   );
 }
 
+function XIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M18.9 2H22l-7.4 8.5L23 22h-6.8l-5.3-6.9L4.8 22H2l7.9-9L1.4 2h6.9l4.8 6.3L18.9 2zm-2.4 18h1.9L7.6 3.9H5.6L16.5 20z" />
+    </svg>
+  );
+}
+
 export function Nav({ launch = true }: { launch?: boolean }) {
   return (
     <header className="sticky top-0 z-30 border-b border-[var(--line)] bg-[var(--bg)]/95 backdrop-blur-md">
@@ -26,8 +34,14 @@ export function Nav({ launch = true }: { launch?: boolean }) {
           <a href={CONFIG.github} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 hover:text-[var(--text)]">
             <GitHubIcon /> GitHub
           </a>
+          <a href={CONFIG.twitter} target="_blank" rel="noreferrer" aria-label="Tenor on X" className="hover:text-[var(--text)]">
+            <XIcon />
+          </a>
         </nav>
         <div className="flex items-center gap-3">
+          <a href={CONFIG.twitter} target="_blank" rel="noreferrer" aria-label="Tenor on X" className="text-[var(--muted)] hover:text-[var(--text)] sm:hidden">
+            <XIcon />
+          </a>
           <a href={CONFIG.github} target="_blank" rel="noreferrer" className="text-[var(--muted)] hover:text-[var(--text)] sm:hidden">
             <GitHubIcon />
           </a>

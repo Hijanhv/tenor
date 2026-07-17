@@ -13,7 +13,8 @@
 
 <p align="center">
   <b><a href="https://tenor-blond-xi.vercel.app">Live app</a></b> ·
-  <a href="https://stellar.expert/explorer/testnet/contract/CBPQRQTLLJQOJGXKDNVU4VKXHSTBZMFPUUSYY3X5J5RJZXNV5POWNNQV">Live contract on testnet</a>
+  <a href="https://stellar.expert/explorer/testnet/contract/CBETJAH3AEX2TDBDNL6LRYE4DQVR4GS5Q4C2MASQPXTF5YCFTGQVFTV4">Live contract on testnet</a> ·
+  <a href="https://x.com/tenor_stellar">@tenor_stellar</a>
 </p>
 
 ---
@@ -82,9 +83,9 @@ flowchart LR
 
 | Piece | Contract id |
 | --- | --- |
-| Tokenizer + Rate AMM | [`CBPQRQTL…POWNNQV`](https://stellar.expert/explorer/testnet/contract/CBPQRQTLLJQOJGXKDNVU4VKXHSTBZMFPUUSYY3X5J5RJZXNV5POWNNQV) |
-| Test yield asset (TSY) | [`CACC63KH…QU5N5U6`](https://stellar.expert/explorer/testnet/contract/CACC63KHPZBAYUSK2EX6GZSKTS4M24TLDMMJXMTQHM2PFCTYWQU5N5U6) |
-| Test USDC | [`CAF3LGHE…J2MX75B`](https://stellar.expert/explorer/testnet/contract/CAF3LGHESH7YB25JITBRVPYUZCT46OXGVFY4MGXR2QXYIUP7XJ2MX75B) |
+| Tokenizer + Rate AMM | [`CBETJAH3…GQVFTV4`](https://stellar.expert/explorer/testnet/contract/CBETJAH3AEX2TDBDNL6LRYE4DQVR4GS5Q4C2MASQPXTF5YCFTGQVFTV4) |
+| Test yield asset (TSY) | [`CC7BAPEI…35NAIGS`](https://stellar.expert/explorer/testnet/contract/CC7BAPEIEPQNONJH7B3ED3OSOXVII4ZAWY2GZ6ONAV5DJV66C35NAIGS) |
+| Test USDC | [`CCEZRDEY…MXWGKH2`](https://stellar.expert/explorer/testnet/contract/CCEZRDEYDK6CISZJSRBJGNXUW34X5OEBDYXXF5MJO6N3XFJ3GMXWGKH2) |
 
 The web app reads every number straight from these contracts. Nothing in the interface is mocked.
 
