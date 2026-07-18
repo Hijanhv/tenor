@@ -9,13 +9,13 @@
   <img src="https://img.shields.io/badge/contracts-Soroban%20(Rust)-06B6D4" alt="soroban"/>
   <img src="https://img.shields.io/badge/tests-9%20passing-16a34a" alt="tests"/>
   <img src="https://img.shields.io/badge/license-MIT-64748B" alt="license"/>
-  <a href="https://x.com/tenor_stellar"><img src="https://img.shields.io/badge/X-@tenor__stellar-000000?logo=x&logoColor=white" alt="X"/></a>
+  <a href="https://x.com/tenor_stellar"><img src="https://img.shields.io/badge/Twitter-follow-000000?logo=x&logoColor=white" alt="Twitter"/></a>
 </p>
 
 <p align="center">
   <b><a href="https://tenor-blond-xi.vercel.app">Live app</a></b> ·
   <a href="https://stellar.expert/explorer/testnet/contract/CBETJAH3AEX2TDBDNL6LRYE4DQVR4GS5Q4C2MASQPXTF5YCFTGQVFTV4">Live contract on testnet</a> ·
-  <a href="https://x.com/tenor_stellar">@tenor_stellar</a>
+  <a href="https://x.com/tenor_stellar">Twitter</a>
 </p>
 
 ---
