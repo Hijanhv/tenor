@@ -13,9 +13,18 @@
 </p>
 
 <p align="center">
+  <b><a href="https://www.youtube.com/watch?v=CiplkkkV45M">Watch the demo</a></b> ·
   <b><a href="https://tenor-blond-xi.vercel.app">Live app</a></b> ·
   <a href="https://stellar.expert/explorer/testnet/contract/CBETJAH3AEX2TDBDNL6LRYE4DQVR4GS5Q4C2MASQPXTF5YCFTGQVFTV4">Live contract on testnet</a> ·
   <a href="https://x.com/tenor_stellar">Twitter</a>
+</p>
+
+<p align="center">
+  <a href="https://www.youtube.com/watch?v=CiplkkkV45M">
+    <img src="https://img.youtube.com/vi/CiplkkkV45M/maxresdefault.jpg" alt="Watch the Tenor demo" width="640"/>
+  </a>
+  <br/>
+  <sub>▶ Watch the demo</sub>
 </p>
 
 ---
