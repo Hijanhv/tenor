@@ -162,6 +162,22 @@ Stellar is betting on real world assets and stablecoin yield, and that bet grew 
 
 Tenor is a primitive, not another app, so it lifts the whole ecosystem. It turns Blend positions, DeFindex shares, and tokenized treasuries into fixed rate instruments, gives them a yield market, and deepens liquidity across all of them. It composes with Reflector for marks and with any DEX for PT and YT trading. Filling the empty interest rate layer is one of the highest leverage things that can be built on Stellar right now, and it is exactly the kind of financial primitive the ecosystem is asking for.
 
+## Roadmap
+
+- **Mainnet deployment** of the tokenizer, time decay AMM, and carry vault.
+- **Real yield sources** as the underlying: Blend lending positions, DeFindex vault shares, and tokenized treasuries such as Ondo USDY.
+- **PT and YT trading** routed through the Stellar DEX and Soroban AMMs for deeper liquidity.
+- **Reflector** for production marks and rate feeds.
+- **More maturities and markets**, so savers can choose a tenor and issuers can list their own assets.
+
+## Repository layout
+
+- `contracts/tokenizer` — the whole protocol in Rust and Soroban: split and recombine, the yield accumulator, redemption, the time decay PT/USDC AMM, and the carry vault.
+- `contracts/mock-token` — a small SEP-41 token for the testnet demo.
+- `web/` — the Next.js app: the landing page, the fixed rate app, and the live analytics page.
+- `docs/` — the Mintlify documentation site.
+- `deploy/` — the testnet deployment script.
+
 ## Testing
 
 Every claim above is covered by tests. Run them:
