@@ -8,38 +8,21 @@ export function Logo({ size = 40 }: { size?: number }) {
       aria-label="Tenor"
     >
       <defs>
-        <linearGradient id="tg" x1="28" y1="12" x2="94" y2="108" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#2F4BFF" />
-          <stop offset="1" stopColor="#06B6D4" />
-        </linearGradient>
-        <linearGradient id="tgy" x1="72" y1="14" x2="86" y2="60" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#FBBF24" />
-          <stop offset="1" stopColor="#F97316" />
+        <linearGradient id="tgoat" x1="16" y1="18" x2="104" y2="102" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#FF63C9" />
+          <stop offset="1" stopColor="#C4007B" />
         </linearGradient>
       </defs>
-      {/* stem */}
-      <path d="M60 104 V78" stroke="url(#tg)" strokeWidth="11" strokeLinecap="round" />
-      {/* fork */}
-      <path
-        d="M60 78 C60 66 44 66 44 54 M60 78 C60 66 76 66 76 54"
-        stroke="url(#tg)"
-        strokeWidth="11"
-        strokeLinecap="round"
-        fill="none"
-      />
-      {/* left tine: PT, straight, capped at par */}
-      <path d="M44 54 V24" stroke="url(#tg)" strokeWidth="11" strokeLinecap="round" />
-      <circle cx="44" cy="17" r="7" fill="#2F4BFF" />
-      {/* right tine: YT, rises like a yield curve */}
-      <path
-        d="M76 54 C76 42 70 40 76 30 C80 24 82 26 84 20"
-        stroke="url(#tgy)"
-        strokeWidth="11"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        fill="none"
-      />
-      <path d="M77 17 L85 13 L87 21 Z" fill="#F97316" />
+      {/* horns: bold spiral, tapering to a curled tip */}
+      <path d="M50 44 C42 24 24 15 14 24 C6 31 9 43 21 46 C14 44 14 37 21 36" stroke="url(#tgoat)" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      <path d="M70 44 C78 24 96 15 106 24 C114 31 111 43 99 46 C106 44 106 37 99 36" stroke="url(#tgoat)" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      {/* ears */}
+      <path d="M40 53 C32 50 25 52 23 59 C31 62 38 58 43 54 Z" fill="url(#tgoat)" />
+      <path d="M80 53 C88 50 95 52 97 59 C89 62 82 58 77 54 Z" fill="url(#tgoat)" />
+      {/* face */}
+      <path d="M42 47 C42 42 78 42 78 47 C79 61 73 75 60 87 C47 75 41 61 42 47 Z" fill="url(#tgoat)" />
+      {/* beard */}
+      <path d="M55 83 L60 96 L65 83 Z" fill="url(#tgoat)" />
     </svg>
   );
 }

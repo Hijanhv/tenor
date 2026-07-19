@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
-import { CandleChart } from "@/components/CandleChart";
-import { LiveRate } from "@/components/LiveRate";
+import { HeroArt } from "@/components/HeroArt";
+import { HowItWorks } from "@/components/HowItWorks";
+import { YieldSources } from "@/components/YieldSources";
 
 export default function Landing() {
   return (
@@ -11,134 +12,112 @@ export default function Landing() {
       <Nav />
 
       {/* hero */}
-      <section className="mx-auto max-w-6xl px-5 pt-16 pb-10 sm:pt-24">
-        <div className="grid items-center gap-10 md:grid-cols-2">
+      <section className="mx-auto flex min-h-[calc(100vh-72px)] max-w-6xl items-center px-5 py-12">
+        <div className="grid w-full items-center gap-12 lg:grid-cols-[1.02fr_0.98fr]">
           <div className="animate-rise">
-            <LiveRate />
-            <h1 className="mt-5 text-4xl font-bold leading-[1.05] tracking-tight sm:text-6xl">
-              Lock a <span className="grad-animated">fixed rate</span> on Stellar yield.
-            </h1>
-            <p className="mt-5 max-w-lg text-lg text-[var(--muted)]">
-              Tenor splits any yield bearing asset into a principal token and a
-              yield token. Buy principal at a discount and lock a guaranteed
-              return, or trade the interest rate on its own. The fixed rate layer
-              Stellar was missing.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link href="/app" className="btn-primary rounded-full px-6 py-3 font-semibold">Launch app</Link>
-              <Link href="/docs" className="btn-ghost rounded-full px-6 py-3 font-semibold">Read the docs</Link>
+            <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--brand-1)]">
+              The fixed rate market for Stellar
             </div>
-            <div className="mt-8 flex flex-wrap gap-x-8 gap-y-2 text-sm text-[var(--muted)]">
-              <Stat n="9/9" l="tests passing" />
-              <Stat n="0" l="fixed rate rivals on Stellar" />
-              <Stat n="~5s" l="settlement" />
+            <h1 className="mt-5 font-display text-6xl font-semibold leading-[1.0] tracking-tight sm:text-7xl">
+              Lock a <span className="font-display italic grad-text">fixed rate</span> on Stellar yield.
+            </h1>
+            <p className="mt-7 max-w-lg text-lg leading-relaxed text-[var(--muted)]">
+              Right now every yield on Stellar floats, so you never really know
+              what next week pays. Tenor splits a yield bearing asset into
+              principal and yield, and lets you lock a return that is set the
+              moment you buy it.
+            </p>
+            <div className="mt-9 flex flex-wrap gap-3">
+              <Link href="/app" className="btn-primary px-7 py-3.5 text-[15px] font-semibold">
+                Launch app
+              </Link>
+              <Link href="/docs" className="btn-ghost rounded-full px-7 py-3.5 text-[15px] font-semibold">
+                Read the docs
+              </Link>
+            </div>
+
+            <div className="mt-12 grid max-w-lg grid-cols-3 gap-6 border-t border-[var(--line)] pt-7">
+              <Pitch t="Lock a rate" d="Buy a guaranteed return." />
+              <Pitch t="Trade the rate" d="Go long or short yield." />
+              <Pitch t="Automate carry" d="Let a vault run it." />
             </div>
           </div>
 
-          <div className="card animate-floaty p-6 sm:p-8">
-            <div className="mb-3 flex items-center justify-between text-sm">
-              <span className="font-semibold">Principal token</span>
-              <span className="text-[var(--up)]">converging to par →</span>
-            </div>
-            <CandleChart className="w-full" />
-            <div className="mt-4 grid grid-cols-3 gap-3 text-center">
-              <Mini label="Buy at" value="0.95" />
-              <Mini label="Redeems at" value="1.00" grad />
-              <Mini label="Locked" value="fixed" />
-            </div>
+          <div className="animate-floaty">
+            <HeroArt />
           </div>
         </div>
       </section>
 
-      {/* problem */}
-      <Section id="problem" kicker="The problem" title="Every yield on Stellar is a guess">
-        <p>
-          Blend, DeFindex, and tokenized treasuries brought real yield to Stellar,
-          and real world assets grew more than 100 percent last year. But every
-          rate floats. Park stablecoins in a pool and you have no idea what next
-          week pays. Eight percent today, three percent next month. No way to lock
-          a rate, no way to buy a guaranteed return, no way to take a view on rates.
-        </p>
-        <p className="mt-4">
-          The public Stellar DeFi directory has exchanges, lending, and
-          collateralized debt, and <b>zero</b> fixed rate or yield tokenization
-          products. The whole interest rate layer of DeFi, the part serious savers
-          and institutions need, is empty.
-        </p>
-      </Section>
-
-      {/* solution + how */}
-      <Section id="how" kicker="The solution" title="Split the asset. Fix the rate.">
-        <p>
-          Give Tenor a yield bearing asset and a maturity. It mints two tokens you
-          can hold or trade on their own.
-        </p>
-        <div className="mt-8 grid gap-4 sm:grid-cols-2">
-          <Card title="PT · principal" tone="brand">
-            Redeems for exactly 1.00 at maturity. Bought below par today, the
-            discount is a locked fixed rate. For savers who want certainty.
-          </Card>
-          <Card title="YT · yield" tone="amber">
-            Collects all the yield until maturity. Go long the rate if you think it
-            rises, sell it if you think it falls. For traders.
-          </Card>
+      {/* how fixed rate carry works */}
+      <section id="how" className="mx-auto max-w-6xl scroll-mt-20 px-5 py-16">
+        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--brand-1)]">
+          How it works
         </div>
-        <p className="mt-6 text-sm text-[var(--muted)]">
-          One rule ties them together: PT + YT always recombine into the original
-          asset. A time decay AMM prices PT so it climbs to par by maturity, which
-          keeps the implied fixed rate stable rather than drifting with the clock.
+        <h2 className="mt-3 max-w-2xl font-display text-4xl font-semibold tracking-tight sm:text-5xl">
+          A fixed rate, carried to maturity
+        </h2>
+        <p className="mt-4 max-w-2xl text-lg leading-relaxed text-[var(--muted)]">
+          A principal token pays exactly 1.00 at maturity. Today it trades below
+          that. Buy it low, hold it, redeem it at par, and the gap is a return
+          that was fixed the moment you bought. Tap any card to trace it.
         </p>
-      </Section>
+        <div className="mt-10">
+          <HowItWorks />
+        </div>
+      </section>
 
-      {/* strategy */}
-      <Section kicker="The quant strategy" title="Fixed rate carry, automated">
-        <div className="grid items-center gap-8 md:grid-cols-2">
+      {/* floating yield sources */}
+      <YieldSources />
+
+      {/* faq */}
+      <section id="faq" className="mx-auto max-w-3xl scroll-mt-20 px-5 py-16">
+        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--brand-1)]">
+          FAQ
+        </div>
+        <h2 className="mt-3 font-display text-4xl font-semibold tracking-tight">Questions, answered</h2>
+        <div className="mt-8">
+          <Faq q="Is the rate really fixed?">
+            Yes. When you buy a principal token below par it redeems for exactly
+            1.00 at maturity. The difference is your return, and it is set the
+            moment you buy, whatever floating rates do afterward.
+          </Faq>
+          <Faq q="Is this a fixed rate or a fixed yield?">
+            A fixed rate. You lock an annualized return for the length of the
+            tenor, not an APY that drifts from one week to the next.
+          </Faq>
+          <Faq q="What happens at maturity?">
+            Your principal redeems one for one for the underlying asset. There is
+            nothing to manage in between.
+          </Faq>
+          <Faq q="Where does the yield go?">
+            To whoever holds the yield token. If you only want certainty, hold
+            principal. If you want a position on the rate, hold yield.
+          </Faq>
+          <Faq q="What can I earn on?">
+            Any yield bearing Stellar asset, such as a Blend position, a DeFindex
+            share, or a tokenized treasury. The testnet demo uses a mock yield
+            token so a fresh wallet can try it.
+          </Faq>
+          <Faq q="Is it live?">
+            Yes, on Stellar testnet. Every number in the app reads straight from
+            the contract.
+          </Faq>
+        </div>
+      </section>
+
+      {/* analytics link */}
+      <section className="mx-auto max-w-6xl px-5 pb-20">
+        <div className="card flex flex-col items-start justify-between gap-5 p-8 sm:flex-row sm:items-center">
           <div>
-            <p>
-              A principal token bought at a discount climbs to par by maturity.
-              That climb is contractually fixed the moment you buy. The carry vault
-              takes one deposit, buys the cheapest principal, holds to maturity,
-              and redeems at par. No liquidations, no floating rate risk.
-            </p>
-            <div className="mt-5 rounded-2xl bg-[var(--bg-2)] p-4 font-mono text-sm">
-              fixed_rate = (1 / pt_price − 1) × year / tenor
-            </div>
-            <p className="mt-4 text-sm text-[var(--muted)]">
-              The rate is computed inside the contract, not guessed by the app.
+            <h3 className="font-display text-2xl font-semibold tracking-tight">See fixed against floating</h3>
+            <p className="mt-2 max-w-md text-[var(--muted)]">
+              Live yields across Stellar apps, week by week, next to a locked
+              Tenor rate. Real data from DeFiLlama.
             </p>
           </div>
-          <img src="/quant-carry.svg" alt="PT converges to par" className="w-full rounded-2xl border border-[var(--line)]" />
-        </div>
-      </Section>
-
-      {/* why stellar */}
-      <Section kicker="Why Stellar needs this" title="A primitive, not another app">
-        <p>
-          Stellar is betting on real world assets and stablecoin yield. That
-          capital does not move for floating, unpredictable returns. It moves for
-          fixed rates it can model and hedge. Tenor turns Blend positions,
-          DeFindex shares, and tokenized treasuries into fixed rate instruments and
-          gives them a yield market, deepening liquidity across all of them.
-          Filling the empty interest rate layer is one of the highest leverage
-          things that can be built on Stellar right now.
-        </p>
-        <div className="mt-8 grid gap-4 sm:grid-cols-3">
-          <Who title="Savers" body="A real fixed rate on dollars. Lock a number, stop watching APYs." />
-          <Who title="Traders" body="The first clean way to go long or short Stellar interest rates." />
-          <Who title="Institutions" body="Predictable, hedgeable returns, the precondition for moving size on chain." />
-        </div>
-      </Section>
-
-      {/* CTA */}
-      <section className="mx-auto max-w-6xl px-5 py-16">
-        <div className="card grad-fill overflow-hidden p-10 text-center text-white">
-          <h2 className="text-3xl font-bold tracking-tight">Lock your first fixed rate</h2>
-          <p className="mx-auto mt-3 max-w-md text-white/85">
-            Connect Freighter on testnet, grab test tokens from the faucet, and
-            lock a rate in a couple of clicks.
-          </p>
-          <Link href="/app" className="mt-6 inline-block rounded-full bg-white px-7 py-3 font-semibold text-[var(--brand-1)]">
-            Launch the app
+          <Link href="/analytics" className="btn-ghost shrink-0 rounded-full px-6 py-3 text-sm font-semibold">
+            Open analytics
           </Link>
         </div>
       </section>
@@ -148,48 +127,20 @@ export default function Landing() {
   );
 }
 
-function Section({ id, kicker, title, children }: { id?: string; kicker: string; title: string; children: React.ReactNode }) {
-  return (
-    <section id={id} className="mx-auto max-w-6xl scroll-mt-20 px-5 py-14">
-      <div className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-1)]">{kicker}</div>
-      <h2 className="mt-2 max-w-2xl text-3xl font-bold tracking-tight sm:text-4xl">{title}</h2>
-      <div className="mt-5 max-w-2xl text-lg text-[var(--muted)]">{children}</div>
-    </section>
-  );
-}
-
-function Card({ title, tone, children }: { title: string; tone: "brand" | "amber"; children: React.ReactNode }) {
-  return (
-    <div className="card card-hover p-6">
-      <div className={`text-sm font-bold ${tone === "brand" ? "grad-text" : "text-[var(--accent)]"}`}>{title}</div>
-      <p className="mt-2 text-[var(--muted)]">{children}</p>
-    </div>
-  );
-}
-
-function Who({ title, body }: { title: string; body: string }) {
-  return (
-    <div className="rounded-2xl border border-[var(--line)] bg-[var(--card)] p-5">
-      <div className="font-semibold">{title}</div>
-      <p className="mt-1 text-sm text-[var(--muted)]">{body}</p>
-    </div>
-  );
-}
-
-function Stat({ n, l }: { n: string; l: string }) {
+function Pitch({ t, d }: { t: string; d: string }) {
   return (
     <div>
-      <span className="text-lg font-bold text-[var(--text)]">{n}</span>{" "}
-      <span>{l}</span>
+      <div className="text-sm font-semibold text-[var(--text)]">{t}</div>
+      <div className="mt-1 text-xs text-[var(--muted)]">{d}</div>
     </div>
   );
 }
 
-function Mini({ label, value, grad }: { label: string; value: string; grad?: boolean }) {
+function Faq({ q, children }: { q: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-xl bg-[var(--bg-2)] p-3">
-      <div className="text-[11px] text-[var(--muted)]">{label}</div>
-      <div className={`text-lg font-bold ${grad ? "grad-text" : ""}`}>{value}</div>
-    </div>
+    <details className="faq">
+      <summary>{q}</summary>
+      <p>{children}</p>
+    </details>
   );
 }

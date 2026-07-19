@@ -4,7 +4,7 @@ import { Footer } from "@/components/Footer";
 import { CONFIG, CONTRACTS } from "@/lib/config";
 
 export const metadata: Metadata = {
-  title: "Docs — Tenor",
+  title: "Docs · Tenor",
   description: "How Tenor works: principal and yield tokens, the time decay AMM, the carry vault, and the deployed contracts.",
 };
 

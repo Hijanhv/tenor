@@ -45,13 +45,7 @@ export default function AppPage() {
             <h1 className="text-2xl font-bold tracking-tight">Fixed rate market</h1>
             <p className="text-sm text-[var(--muted)]">Live on Stellar Testnet, reading straight from the contract.</p>
           </div>
-          {t.address ? (
-            <span className="pill px-3 py-1.5 text-sm font-medium">{shortAddr(t.address)}</span>
-          ) : (
-            <button onClick={t.connect} className="btn-primary rounded-full px-4 py-2 text-sm font-semibold">
-              Connect wallet
-            </button>
-          )}
+          <WalletButton t={t} />
         </div>
 
         {/* live market */}
@@ -303,6 +297,53 @@ function Row({ label, value, good, strong }: { label: string; value: string; goo
     <div className="flex justify-between">
       <span className="text-[var(--muted)]">{label}</span>
       <span className={good ? "font-semibold text-[var(--up)]" : strong ? "font-semibold" : "font-medium"}>{value}</span>
+    </div>
+  );
+}
+
+function WalletButton({ t }: { t: T }) {
+  const [open, setOpen] = useState(false);
+
+  if (!t.address) {
+    return (
+      <button onClick={t.connect} className="btn-primary rounded-full px-4 py-2 text-sm font-semibold">
+        Connect wallet
+      </button>
+    );
+  }
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="pill flex items-center gap-2 px-3 py-1.5 text-sm font-medium"
+      >
+        <span className={t.wrongNetwork ? "h-2 w-2 rounded-full bg-[var(--down)]" : "dot-live"} />
+        {shortAddr(t.address)}
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden className={`transition-transform ${open ? "rotate-180" : ""}`}>
+          <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 z-40 mt-2 w-64 rounded-2xl border border-[var(--line)] bg-[var(--card)] p-2 shadow-xl">
+            <div className="px-3 pt-2 text-[11px] uppercase tracking-wide text-[var(--muted)]">Connected wallet</div>
+            <div className="break-all px-3 pb-2 pt-1 font-mono text-xs text-[var(--text)]">{t.address}</div>
+            {t.wrongNetwork && (
+              <div className="mx-1 mb-1 rounded-lg bg-[var(--bg-2)] px-3 py-2 text-xs text-[var(--down)]">
+                Wallet is not on Testnet. Switch Freighter to the Test network.
+              </div>
+            )}
+            <button
+              onClick={() => { t.disconnect(); setOpen(false); }}
+              className="w-full rounded-xl px-3 py-2 text-left text-sm font-medium hover:bg-[var(--bg-2)]"
+            >
+              Disconnect
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }

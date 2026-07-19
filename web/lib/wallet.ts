@@ -1,5 +1,6 @@
 import {
   isConnected,
+  isAllowed as freighterIsAllowed,
   requestAccess,
   getAddress,
   getNetwork,
@@ -16,8 +17,28 @@ export async function hasFreighter(): Promise<boolean> {
   }
 }
 
+// Whether the user has already granted this app access in Freighter. Used to
+// decide if we can silently restore a session on load.
+export async function isAllowed(): Promise<boolean> {
+  try {
+    const res = await freighterIsAllowed();
+    if (typeof res === "boolean") return res;
+    return !!(res as { isAllowed?: boolean }).isAllowed;
+  } catch {
+    return false;
+  }
+}
+
+// Opens Freighter and returns the account the user approves. requestAccess is the
+// method that triggers Freighter's popup (getAddress would connect silently); the
+// account is whichever is active in Freighter, and the user picks it there.
 export async function connect(): Promise<string> {
+  if (!(await hasFreighter())) {
+    throw new Error("Freighter not detected. Install the Freighter extension, then reload.");
+  }
   const res = await requestAccess();
+  const err = (res as { error?: { message?: string } }).error;
+  if (err) throw new Error(err.message || "Freighter connection was declined.");
   const address = (res as { address?: string }).address;
   if (!address) throw new Error("Freighter did not return an address");
   return address;

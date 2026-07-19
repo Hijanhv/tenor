@@ -1,0 +1,27 @@
+---
+title: "Core concepts"
+description: "SY, PT, YT, and the invariant that ties them together."
+---
+
+Tenor turns one yield bearing asset into two tradable tokens.
+
+| Term | Meaning |
+| --- | --- |
+| **SY** | The yield bearing underlying, for example a Blend pool token or a tokenized treasury. In the demo it is a mock token called TSY. |
+| **PT** | Principal token. Redeems for exactly 1.00 of the asset at maturity. Bought below par, the discount is a locked fixed rate. |
+| **YT** | Yield token. Collects all the yield the SY earns until maturity. A pure position on the interest rate. |
+| **Invariant** | PT plus YT always recombine into the original asset. |
+
+## The intuition
+
+A yield bearing asset is really two things bundled together: the promise to get
+your principal back, and the stream of yield it throws off along the way. Tenor
+unbundles them.
+
+- If you only want certainty, hold PT. You know exactly what it is worth at
+  maturity, which is 1.00, so buying it below par locks a fixed return.
+- If you want exposure to the rate, hold YT. Its value rises when yield rises and
+  falls when yield falls.
+
+Because principal plus yield always equals the original asset, the two halves can
+be recombined at any time.

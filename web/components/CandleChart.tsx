@@ -16,19 +16,19 @@ export function CandleChart({ className = "" }: { className?: string }) {
     <svg viewBox="0 0 250 140" className={className} fill="none" role="img" aria-label="Yield converging to par">
       <defs>
         <linearGradient id="cc" x1="0" y1="120" x2="250" y2="20" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#2f4bff" />
-          <stop offset="1" stopColor="#06b6d4" />
+          <stop stopColor="#e10098" />
+          <stop offset="1" stopColor="#c3f655" />
         </linearGradient>
         <linearGradient id="cca" x1="0" y1="20" x2="0" y2="130" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#2f4bff" stopOpacity="0.16" />
-          <stop offset="1" stopColor="#2f4bff" stopOpacity="0" />
+          <stop stopColor="#e10098" stopOpacity="0.16" />
+          <stop offset="1" stopColor="#e10098" stopOpacity="0" />
         </linearGradient>
       </defs>
 
       {CANDLES.map((k, i) => {
         const top = Math.min(k.o, k.c);
         const h = Math.max(3, Math.abs(k.o - k.c));
-        const color = k.up ? "#10b981" : "#ef4444";
+        const color = k.up ? "#6ba300" : "#e5484d";
         return (
           <g key={i} style={{ transformOrigin: `${k.x}px 130px`, animation: `growbar 0.5s ${i * 0.08}s ease-out both` }}>
             <line x1={k.x} y1={k.hi} x2={k.x} y2={k.lo} stroke={color} strokeWidth="1.5" opacity="0.65" />
@@ -45,7 +45,7 @@ export function CandleChart({ className = "" }: { className?: string }) {
       <path d="M8 118 C70 110 150 60 244 26 L244 130 L8 130 Z" fill="url(#cca)" opacity="0">
         <animate attributeName="opacity" from="0" to="1" dur="1s" begin="2.4s" fill="freeze" />
       </path>
-      <circle r="4.5" fill="#06b6d4" stroke="#fff" strokeWidth="1.5">
+      <circle r="4.5" fill="#c3f655" stroke="#fff" strokeWidth="1.5">
         <animateMotion dur="2.4s" begin="0.4s" fill="freeze" path="M8 118 C70 110 150 60 244 26" />
       </circle>
     </svg>

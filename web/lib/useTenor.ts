@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Tenor, type Market, type Vault } from "./stellar";
 import { CONFIG } from "./config";
-import { connect as connectWallet, currentAddress, onTestnet } from "./wallet";
+import { connect as connectWallet, onTestnet } from "./wallet";
 
 export type Balances = {
   usdc: bigint;
@@ -120,15 +120,20 @@ export function useTenor() {
     vaultClaim: () => run("vault-claim", (a) => Tenor.vaultClaim(a)),
   };
 
+  const disconnect = useCallback(() => {
+    addrRef.current = null;
+    setAddress(null);
+    setWrongNetwork(false);
+    setBalances(ZERO);
+    setVaultShares(0n);
+  }, []);
+
+  // Start disconnected on every load. Public market data reads without a wallet,
+  // and the user connects explicitly. That keeps the Connect button visible and
+  // means Connect always runs requestAccess(), which opens Freighter, rather than
+  // silently reusing whatever account Freighter last had allowed.
   useEffect(() => {
-    currentAddress().then((a) => {
-      if (a) {
-        addrRef.current = a;
-        setAddress(a);
-        onTestnet().then((ok) => setWrongNetwork(!ok));
-      }
-      refresh();
-    });
+    refresh();
     const id = setInterval(refresh, 12_000);
     return () => clearInterval(id);
   }, [refresh]);
@@ -148,6 +153,7 @@ export function useTenor() {
     error,
     lastTx,
     connect,
+    disconnect,
     refresh,
     actions,
   };
