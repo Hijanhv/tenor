@@ -13,6 +13,7 @@ export const CONFIG = {
   // simulations (no signature, no fees, nothing is submitted).
   readSource: deployment.issuer,
   github: "https://github.com/Hijanhv/tenor",
+  docs: "https://tenor-421719bc.mintlify.site",
   explorer: (id: string) =>
     `https://stellar.expert/explorer/testnet/contract/${id}`,
   account: (id: string) =>

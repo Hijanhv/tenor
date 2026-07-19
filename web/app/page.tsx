@@ -4,6 +4,7 @@ import { Footer } from "@/components/Footer";
 import { HeroArt } from "@/components/HeroArt";
 import { HowItWorks } from "@/components/HowItWorks";
 import { YieldSources } from "@/components/YieldSources";
+import { CONFIG } from "@/lib/config";
 
 export default function Landing() {
   return (
@@ -31,9 +32,9 @@ export default function Landing() {
               <Link href="/app" className="btn-primary px-7 py-3.5 text-[15px] font-semibold">
                 Launch app
               </Link>
-              <Link href="/docs" className="btn-ghost rounded-full px-7 py-3.5 text-[15px] font-semibold">
+              <a href={CONFIG.docs} target="_blank" rel="noreferrer" className="btn-ghost rounded-full px-7 py-3.5 text-[15px] font-semibold">
                 Read the docs
-              </Link>
+              </a>
             </div>
 
             <div className="mt-12 grid max-w-lg grid-cols-3 gap-6 border-t border-[var(--line)] pt-7">
