@@ -43,6 +43,7 @@ export function Footer() {
             <li><Link className="text-[var(--muted)] hover:text-[var(--text)]" href="/analytics">Analytics</Link></li>
             <li><a className="text-[var(--muted)] hover:text-[var(--text)]" href={CONFIG.docs} target="_blank" rel="noreferrer">Docs</a></li>
             <li><a className="text-[var(--muted)] hover:text-[var(--text)]" href={CONFIG.github} target="_blank" rel="noreferrer">GitHub repository</a></li>
+            <li><a className="text-[var(--muted)] hover:text-[var(--text)]" href={CONFIG.twitter} target="_blank" rel="noreferrer">Follow on X (Twitter)</a></li>
           </ul>
         </div>
       </div>

@@ -1,21 +1,23 @@
 <p align="center">
-  <img src="assets/tenor-logo.svg" alt="Tenor" width="380"/>
+  <img src="assets/tenor-banner.png" alt="Tenor — the fixed rate market for Stellar" width="880"/>
 </p>
 
 <p align="center"><b>The fixed rate market for Stellar.</b> Split any yield bearing asset into a Principal token and a Yield token. Lock a guaranteed return, or trade the interest rate on its own.</p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/network-Stellar%20Testnet-4F46E5" alt="testnet"/>
-  <img src="https://img.shields.io/badge/contracts-Soroban%20(Rust)-06B6D4" alt="soroban"/>
+  <img src="https://img.shields.io/badge/network-Stellar%20Testnet-E10098" alt="testnet"/>
+  <img src="https://img.shields.io/badge/contracts-Soroban%20(Rust)-1a1a15" alt="soroban"/>
   <img src="https://img.shields.io/badge/tests-9%20passing-16a34a" alt="tests"/>
   <img src="https://img.shields.io/badge/license-MIT-64748B" alt="license"/>
+  <a href="https://tenor-421719bc.mintlify.site"><img src="https://img.shields.io/badge/docs-Mintlify-E10098" alt="docs"/></a>
   <a href="https://x.com/tenor_stellar"><img src="https://img.shields.io/badge/Twitter-follow-000000?logo=x&logoColor=white" alt="Twitter"/></a>
 </p>
 
 <p align="center">
-  <b><a href="https://www.youtube.com/watch?v=CiplkkkV45M">Watch the demo</a></b> ·
   <b><a href="https://tenor-blond-xi.vercel.app">Live app</a></b> ·
-  <a href="https://stellar.expert/explorer/testnet/contract/CBETJAH3AEX2TDBDNL6LRYE4DQVR4GS5Q4C2MASQPXTF5YCFTGQVFTV4">Live contract on testnet</a> ·
+  <b><a href="https://tenor-421719bc.mintlify.site">Docs</a></b> ·
+  <a href="https://www.youtube.com/watch?v=CiplkkkV45M">Demo video</a> ·
+  <a href="https://stellar.expert/explorer/testnet/contract/CBETJAH3AEX2TDBDNL6LRYE4DQVR4GS5Q4C2MASQPXTF5YCFTGQVFTV4">Live contract</a> ·
   <a href="https://x.com/tenor_stellar">Twitter</a>
 </p>
 
@@ -61,6 +63,17 @@ Three layers, each small and composable, built so the rest of Stellar plugs stra
 3. **Carry vault.** An on chain vault that takes a single deposit, buys the cheapest principal, holds it to maturity, redeems at par, and hands depositors the locked return. The quant strategy as one click.
 
 A saver never has to understand any of this. They see one number, the fixed rate, type an amount, and lock it in a couple of clicks.
+
+## The app
+
+The product is live on Stellar Testnet with a design system built for clarity, in a dark theme with a vibrant pink and lime brand.
+
+- **One screen to lock a fixed rate, split yield, or run the carry vault.** Connect Freighter, mint test USDC and TSY from the built in faucet, and every number (fixed rate, PT price, pool liquidity, and your balances) is read straight from the contract, nothing mocked.
+- **Live yield analytics.** A dedicated analytics page charts real Stellar yields from Blend and Ondo, pulled from DeFiLlama and refreshed hourly, week by week against a flat Tenor fixed rate, so you can see fixed against floating at a glance.
+- **Docs on Mintlify.** Full protocol documentation, covering how a discount becomes a fixed rate, the on chain formula, the time decay AMM, and the technical architecture with diagrams, lives at [tenor-421719bc.mintlify.site](https://tenor-421719bc.mintlify.site).
+- **Explicit wallet flow.** Connect opens Freighter for account approval, and a disconnect control lets you switch accounts.
+
+Live app: [tenor-blond-xi.vercel.app](https://tenor-blond-xi.vercel.app)
 
 ## Technical architecture
 

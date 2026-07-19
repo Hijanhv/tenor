@@ -14,6 +14,7 @@ export const CONFIG = {
   readSource: deployment.issuer,
   github: "https://github.com/Hijanhv/tenor",
   docs: "https://tenor-421719bc.mintlify.site",
+  twitter: "https://x.com/tenor_stellar",
   explorer: (id: string) =>
     `https://stellar.expert/explorer/testnet/contract/${id}`,
   account: (id: string) =>
