@@ -104,13 +104,33 @@ flowchart LR
 
 **Live on Stellar Testnet**
 
-| Piece | Contract id |
+| Piece | On chain id |
 | --- | --- |
 | Tokenizer + Rate AMM | [`CBETJAH3…GQVFTV4`](https://stellar.expert/explorer/testnet/contract/CBETJAH3AEX2TDBDNL6LRYE4DQVR4GS5Q4C2MASQPXTF5YCFTGQVFTV4) |
 | Test yield asset (TSY) | [`CC7BAPEI…35NAIGS`](https://stellar.expert/explorer/testnet/contract/CC7BAPEIEPQNONJH7B3ED3OSOXVII4ZAWY2GZ6ONAV5DJV66C35NAIGS) |
 | Test USDC | [`CCEZRDEY…MXWGKH2`](https://stellar.expert/explorer/testnet/contract/CCEZRDEYDK6CISZJSRBJGNXUW34X5OEBDYXXF5MJO6N3XFJ3GMXWGKH2) |
+| Deployer / issuer wallet (Freighter) | [`GBESJK7N…CHOBE5EP`](https://stellar.expert/explorer/testnet/account/GBESJK7N25HADVP5W5RD2OEY6CNUF345ADSX2NKWOMIHJ46ZCHOBE5EP) |
 
 The web app reads every number straight from these contracts. Nothing in the interface is mocked.
+
+**Mainnet deployment cost**
+
+Soroban charges for the bytes a transaction writes plus rent on the ledger entries it creates, and the write rate scales with how large the network's state already is. Mainnet state is far bigger than testnet's, so the same deploy costs about **17x more** there. The two upload figures below were measured by simulating the real wasm against a mainnet RPC node (protocol 27, ledger 63,606,794); the rest are the testnet fees this repo actually paid, scaled by that multiplier.
+
+| Step | Testnet (paid) | Mainnet (est.) |
+| --- | --- | --- |
+| Upload `tokenizer` wasm, 19,931 bytes | 1.70352 XLM | **29.34 XLM** (measured) |
+| Create the contract instance | 0.00215 XLM | 0.04 XLM |
+| `initialize` the market | 0.01080 XLM | 0.19 XLM |
+| `deposit`, split SY into PT + YT | 0.00995 XLM | 0.17 XLM |
+| `add_liquidity`, seed the PT/USDC pool | 0.00807 XLM | 0.14 XLM |
+| `vault_deposit` + `vault_invest` | 0.00503 XLM | 0.09 XLM |
+| `sync`, one keeper index push | 0.00076 XLM | 0.01 XLM |
+| **Total, first market end to end** | 1.74 XLM | **~30 XLM** (about 5.50 USD) |
+
+Two things make this cheaper than it looks. The wasm upload is roughly 98 percent of the bill and happens **once**: every additional market reuses the same code entry, so listing a new maturity costs only the instance plus `initialize`, about **0.22 XLM**. And the mock token never ships to mainnet, since real markets use Blend, DeFindex, or USDY directly (uploading it would otherwise add 8.38 XLM).
+
+Two things to budget beyond the table. The deployer account needs the standard 1 XLM minimum balance, which is reserved rather than spent. And the 20 KB code entry accrues rent, so it needs periodic `extend_ttl` calls to avoid archival, at a cost on the same order as the original upload rent per renewal period. Re-simulate against a mainnet RPC before deploying for real, because the write rate moves with network state.
 
 ## The quant strategy: fixed rate carry
 
