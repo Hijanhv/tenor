@@ -5,9 +5,10 @@
 <p align="center"><b>The fixed rate market for Stellar.</b> Split any yield bearing asset into a Principal token and a Yield token. Lock a guaranteed return, or trade the interest rate on its own.</p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/network-Stellar%20Testnet-E10098" alt="testnet"/>
+  <img src="https://img.shields.io/badge/mainnet-live-16a34a" alt="mainnet"/>
+  <img src="https://img.shields.io/badge/testnet-v2%20hardened-E10098" alt="testnet"/>
   <img src="https://img.shields.io/badge/contracts-Soroban%20(Rust)-1a1a15" alt="soroban"/>
-  <img src="https://img.shields.io/badge/tests-9%20passing-16a34a" alt="tests"/>
+  <img src="https://img.shields.io/badge/tests-15%20passing-16a34a" alt="tests"/>
   <img src="https://img.shields.io/badge/license-MIT-64748B" alt="license"/>
   <a href="https://tenor-421719bc.mintlify.site"><img src="https://img.shields.io/badge/docs-Mintlify-E10098" alt="docs"/></a>
   <a href="https://x.com/tenor_stellar"><img src="https://img.shields.io/badge/Twitter-follow-000000?logo=x&logoColor=white" alt="Twitter"/></a>
@@ -17,7 +18,7 @@
   <b><a href="https://tenor-blond-xi.vercel.app">Live app</a></b> ·
   <b><a href="https://tenor-421719bc.mintlify.site">Docs</a></b> ·
   <a href="https://www.youtube.com/watch?v=CiplkkkV45M">Demo video</a> ·
-  <a href="https://stellar.expert/explorer/testnet/contract/CBETJAH3AEX2TDBDNL6LRYE4DQVR4GS5Q4C2MASQPXTF5YCFTGQVFTV4">Live contract</a> ·
+  <a href="https://stellar.expert/explorer/public/contract/CDZFACPLN7EDI55KU4OOSFWTD56DM4GVAUZJ6CMOUQTFKYUQ2BWFQVZI">Mainnet contract</a> ·
   <a href="https://x.com/tenor_stellar">Twitter</a>
 </p>
 
@@ -99,38 +100,101 @@ flowchart LR
 
 **Contracts (Soroban, Rust, `soroban-sdk` 26)**
 
-- `contracts/tokenizer` carries the whole protocol: split and recombine, redeem at maturity, the yield accumulator for YT, the time decay PT rate AMM, and the fixed rate carry vault. Public entry points: `initialize`, `sync`, `deposit`, `combine`, `redeem_pt`, `claim_yield`, `transfer_pt`, `transfer_yt`, `add_liquidity`, `buy_pt`, `sell_pt`, `pt_price`, `fixed_rate`, `time_progress`, `quote_buy_pt`, `pending_yield`, `market_info`, `vault_deposit`, `vault_invest`, `vault_settle`, `vault_claim`, `vault_info`.
-- `contracts/mock-token` is a small SEP-41 token used for the testnet demo so a fresh wallet can mint test USDC and test yield asset with no trustlines.
+- `contracts/tokenizer` carries the whole protocol: split and recombine, redeem at maturity, the yield accumulator for YT, the time decay PT rate AMM, and the fixed rate carry vault. It also carries the safety guards: a bounded `sync` (a single index push cannot exceed `MaxSyncBps`, default +20%), an emergency `pause` that blocks new entries while still allowing exits, a `deposit_cap`, and `set_admin` for rotating control to a multisig. Public entry points: `initialize`, `sync`, `deposit`, `combine`, `redeem_pt`, `claim_yield`, `transfer_pt`, `transfer_yt`, `add_liquidity`, `buy_pt`, `sell_pt`, `pt_price`, `fixed_rate`, `time_progress`, `quote_buy_pt`, `pending_yield`, `market_info`, `vault_deposit`, `vault_invest`, `vault_settle`, `vault_claim`, `vault_info`, `set_admin`, `pause`, `unpause`, `set_deposit_cap`, `set_max_sync_bps`, `is_paused`, `deposit_cap`, `max_sync_bps`.
+- `contracts/mock-token` is a small SEP-41 token used only for the testnet demo, so a fresh wallet can mint a test yield asset and test USDC with no trustlines. It is never deployed to mainnet.
+- `deploy/keeper.sh` is the off-chain yield keeper: it reads a real Stellar yield rate (Blend USDC, live from DeFiLlama) and pushes it to the market index via `sync`, so the market tracks real yield instead of a hand-typed number.
 
-**Live on Stellar Testnet**
+## Deployments
+
+Two networks, on purpose. Mainnet carries the real protocol against real assets; testnet carries the hardened build with a seeded market you can actually trade in.
+
+| | Testnet | Mainnet |
+| --- | --- | --- |
+| Contract | v2, safety guards live | v1 |
+| Underlying | mock test yield asset (TSY) | **real Ondo USDY** |
+| Quote | mock test USDC | **real Circle USDC** |
+| Liquidity | seeded, tradeable (~9.8% fixed rate) | none yet (awaiting audit + capital) |
+| Yield keeper | run on-chain (live Blend rate) | not run (empty market) |
+| Use it for | the interactive demo | proof the protocol is live on mainnet |
+
+**Live on Stellar Mainnet**
 
 | Piece | On chain id |
 | --- | --- |
-| Tokenizer + Rate AMM | [`CBETJAH3…GQVFTV4`](https://stellar.expert/explorer/testnet/contract/CBETJAH3AEX2TDBDNL6LRYE4DQVR4GS5Q4C2MASQPXTF5YCFTGQVFTV4) |
-| Test yield asset (TSY) | [`CC7BAPEI…35NAIGS`](https://stellar.expert/explorer/testnet/contract/CC7BAPEIEPQNONJH7B3ED3OSOXVII4ZAWY2GZ6ONAV5DJV66C35NAIGS) |
-| Test USDC | [`CCEZRDEY…MXWGKH2`](https://stellar.expert/explorer/testnet/contract/CCEZRDEYDK6CISZJSRBJGNXUW34X5OEBDYXXF5MJO6N3XFJ3GMXWGKH2) |
-| Deployer / issuer wallet (Freighter) | [`GBESJK7N…CHOBE5EP`](https://stellar.expert/explorer/testnet/account/GBESJK7N25HADVP5W5RD2OEY6CNUF345ADSX2NKWOMIHJ46ZCHOBE5EP) |
+| Tokenizer + Rate AMM (v1) | [`CDZFACPL…QVZI`](https://stellar.expert/explorer/public/contract/CDZFACPLN7EDI55KU4OOSFWTD56DM4GVAUZJ6CMOUQTFKYUQ2BWFQVZI) |
+| Underlying — Ondo USDY | [`CB3YA656…YGAGP`](https://stellar.expert/explorer/public/contract/CB3YA656OYIHU57657I5KGSBRHE5I3OZU4VFC22PYAOANFZHEWNYGAGP) |
+| Quote — Circle USDC | [`CCW67TSZ…MI75`](https://stellar.expert/explorer/public/contract/CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75) |
+| Deployer / admin wallet | [`GBESJK7N…CHOBE5EP`](https://stellar.expert/explorer/public/account/GBESJK7N25HADVP5W5RD2OEY6CNUF345ADSX2NKWOMIHJ46ZCHOBE5EP) |
 
-The web app reads every number straight from these contracts. Nothing in the interface is mocked.
+Real Ondo USDY splits into PT + YT against real Circle USDC. No mock token was deployed to mainnet. The market launched empty, so `fixed_rate` and `pt_price` read 0 until liquidity is seeded — gated behind an audit and real capital (see the security note below). Wasm hash `8b7b2120…09e35`; full record in [`deploy/mainnet.json`](deploy/mainnet.json).
 
-**Mainnet deployment cost**
+**Live on Stellar Testnet** (v2, the hardened build)
 
-Soroban charges for the bytes a transaction writes plus rent on the ledger entries it creates, and the write rate scales with how large the network's state already is. Mainnet state is far bigger than testnet's, so the same deploy costs about **17x more** there. The two upload figures below were measured by simulating the real wasm against a mainnet RPC node (protocol 27, ledger 63,606,794); the rest are the testnet fees this repo actually paid, scaled by that multiplier.
+| Piece | On chain id |
+| --- | --- |
+| Tokenizer + Rate AMM (v2) | [`CAAB3SFP…GHQHVOI`](https://stellar.expert/explorer/testnet/contract/CAAB3SFPT7TT2ADKXBUCGNUIJHQBMIUZTOBEIMCBR4DI54STBGHQHVOI) |
+| Test yield asset (TSY) | [`CBTKA7CV…ST57DQ`](https://stellar.expert/explorer/testnet/contract/CBTKA7CVL6GDL3Z4FUPBKELSVFB3JOWHLWGHRO5L3RBTXTO7GWST57DQ) |
+| Test USDC | [`CCGU3ZNA…N7CP3T3E`](https://stellar.expert/explorer/testnet/contract/CCGU3ZNAI4OTQSX6JBWFVXFRGJMQAPTAG7KK5OOUXWSOWJLAN7CP3T3E) |
+| Deployer / issuer wallet | [`GBESJK7N…CHOBE5EP`](https://stellar.expert/explorer/testnet/account/GBESJK7N25HADVP5W5RD2OEY6CNUF345ADSX2NKWOMIHJ46ZCHOBE5EP) |
 
-| Step | Testnet (paid) | Mainnet (est.) |
+The testnet underlying and quote are labeled test tokens, because testnet has no real assets — but every rate, price, and balance the app shows is read straight from the live contract, and the analytics and the yield keeper are driven by real Blend and Ondo data from DeFiLlama. Nothing is fabricated and presented as real.
+
+## Mainnet economics
+
+**The deployer wallet**
+
+```
+GBESJK7N25HADVP5W5RD2OEY6CNUF345ADSX2NKWOMIHJ46ZCHOBE5EP
+```
+
+One wallet, both networks. Stellar keypairs are network agnostic, so this is the same key that issued the testnet contracts above, with separate account state on each network. It is the account that pays the mainnet deploy fees and becomes the contract admin, and it is set as `TENOR_MAINNET_WALLET` in [`deploy/deploy_mainnet.sh`](deploy/deploy_mainnet.sh).
+
+| | Mainnet | Testnet |
 | --- | --- | --- |
-| Upload `tokenizer` wasm, 19,931 bytes | 1.70352 XLM | **29.34 XLM** (measured) |
+| Account | [live](https://stellar.expert/explorer/public/account/GBESJK7N25HADVP5W5RD2OEY6CNUF345ADSX2NKWOMIHJ46ZCHOBE5EP), funded 24 Jul 2026 | [live](https://stellar.expert/explorer/testnet/account/GBESJK7N25HADVP5W5RD2OEY6CNUF345ADSX2NKWOMIHJ46ZCHOBE5EP) |
+| Balance | 40.25 XLM | 9,994 test XLM |
+| Trustlines | none, XLM only | — |
+
+Admin is not a formality. This key is the only account that can call `sync`, which pushes the SY to asset index, and `vault_invest`, which deploys vault cash. Lose it and yield accrual and the carry vault both freeze permanently, with no recovery path in the contract.
+
+**Cost**
+
+Soroban charges for the bytes a transaction writes plus rent on the ledger entries it creates, and the write rate scales with how large the network's state already is. Mainnet state is far bigger than testnet's, so the same deploy costs about **17x more** there. The upload figures below were measured by simulating the real wasm against a mainnet RPC node, protocol 27, ledger 63,628,189; the rest are the testnet fees this repo actually paid, scaled by that multiplier.
+
+| Step | Testnet (paid) | Mainnet |
+| --- | --- | --- |
+| Upload `tokenizer` wasm, 19,931 bytes | 1.70352 XLM | **29.33614 XLM** (measured) |
 | Create the contract instance | 0.00215 XLM | 0.04 XLM |
 | `initialize` the market | 0.01080 XLM | 0.19 XLM |
 | `deposit`, split SY into PT + YT | 0.00995 XLM | 0.17 XLM |
 | `add_liquidity`, seed the PT/USDC pool | 0.00807 XLM | 0.14 XLM |
 | `vault_deposit` + `vault_invest` | 0.00503 XLM | 0.09 XLM |
 | `sync`, one keeper index push | 0.00076 XLM | 0.01 XLM |
-| **Total, first market end to end** | 1.74 XLM | **~30 XLM** (about 5.50 USD) |
+| **Total, first market end to end** | 1.74 XLM | **~30.6 XLM** (about 5.42 USD) |
 
-Two things make this cheaper than it looks. The wasm upload is roughly 98 percent of the bill and happens **once**: every additional market reuses the same code entry, so listing a new maturity costs only the instance plus `initialize`, about **0.22 XLM**. And the mock token never ships to mainnet, since real markets use Blend, DeFindex, or USDY directly (uploading it would otherwise add 8.38 XLM).
+Two things make this cheaper than it looks. The wasm upload is roughly 98 percent of the bill and happens **once**: every additional market reuses the same code entry, so listing a new maturity costs only the instance plus `initialize`, about **0.22 XLM**. And the mock token never ships to mainnet, since real markets use Blend, DeFindex, or USDY directly (uploading it would otherwise add 8.38238 XLM, also measured).
 
-Two things to budget beyond the table. The deployer account needs the standard 1 XLM minimum balance, which is reserved rather than spent. And the 20 KB code entry accrues rent, so it needs periodic `extend_ttl` calls to avoid archival, at a cost on the same order as the original upload rent per renewal period. Re-simulate against a mainnet RPC before deploying for real, because the write rate moves with network state.
+**Rent, and why the deploy cost is not the whole cost**
+
+Mainnet's state archival settings, read from the live ledger, are `min_persistent_ttl` 2,073,600 ledgers and `max_entry_ttl` 3,110,400. At roughly five seconds a ledger that is about **120 days of life per payment**, up to a 180 day ceiling. The 20 KB code entry has to be renewed with `extend_ttl` before it lapses or it is archived and the market stops being invokable until someone pays to restore it. A 60 day renewal runs about 14 XLM, so budget on the order of **90 XLM a year** to keep one market alive.
+
+Against that, 40.25 XLM funds exactly one deploy and no renewals. **~250 XLM** is the realistic number to hold: one deploy, one code revision if a fix is needed, and year one of rent, with headroom for the write rate drifting up as network state grows.
+
+**Deploying**
+
+```bash
+stellar keys add deployer                    # if not already in the keystore
+TENOR_SY=C...  ./deploy/deploy_mainnet.sh --dry-run   # preflight + live fee quote, spends nothing
+TENOR_SY=C...  ./deploy/deploy_mainnet.sh             # asks for confirmation before spending
+```
+
+`TENOR_SY` is the contract id of the real yield bearing asset the market splits, a Blend pool token, a DeFindex vault share, or USDY. There is no default and no mock: `initialize` can only be called once per instance and the underlying is permanent, so the choice has to be deliberate. `TENOR_QUOTE` defaults to Circle's USDC on mainnet, `CCW67TSZ…MI75`.
+
+The script refuses to run if the signing key resolves to anything other than the wallet above, and it will not deploy the mock token. Use a dedicated RPC rather than the default: `https://mainnet.sorobanrpc.com` returns 503 on roughly one call in five, and a dropped request between `upload` and `initialize` leaves a paid for code entry with no market behind it.
+
+```bash
+STELLAR_RPC_URL=https://your-provider/... TENOR_SY=C... ./deploy/deploy_mainnet.sh
+```
 
 ## The quant strategy: fixed rate carry
 
@@ -184,19 +248,30 @@ Tenor is a primitive, not another app, so it lifts the whole ecosystem. It turns
 
 ## Roadmap
 
-- **Mainnet deployment** of the tokenizer, time decay AMM, and carry vault.
-- **Real yield sources** as the underlying: Blend lending positions, DeFindex vault shares, and tokenized treasuries such as Ondo USDY.
-- **PT and YT trading** routed through the Stellar DEX and Soroban AMMs for deeper liquidity.
-- **Reflector** for production marks and rate feeds.
-- **More maturities and markets**, so savers can choose a tenor and issuers can list their own assets.
+Shipped:
+
+- **Mainnet deployment** of the tokenizer, time decay AMM, and carry vault, with real Ondo USDY as the underlying and real Circle USDC as the quote.
+- **Safety hardening** — bounded `sync`, `pause`, `deposit_cap`, and `set_admin` — built, tested, and live on the testnet build.
+- **Real yield data** driving the market: the keeper reads Blend USDC's live rate from DeFiLlama and pushes it on-chain via `sync`; the analytics page charts live Blend and Ondo yields.
+
+Next, in order:
+
+1. **Audit** via the Soroban Security Audit Bank (Tenor auto-qualifies as a yield-bearing token protocol), then deploy the hardened v2 to mainnet.
+2. **Multisig admin** — rotate the mainnet admin to a 2-of-3 account so no single key controls `sync` and `vault_invest`.
+3. **Seed real liquidity** into the mainnet USDY/USDC market so it takes deposits and shows a live rate.
+4. **Real yield sources as the underlying** end to end: Blend lending positions and DeFindex vault shares, not just USDY, with the keeper reading their on-chain rate directly instead of via DeFiLlama.
+5. **PT and YT trading** routed through the Stellar DEX and Soroban AMMs, and **Reflector** for production marks.
+6. **More maturities and markets**, so savers can choose a tenor and issuers can list their own assets.
 
 ## Repository layout
 
-- `contracts/tokenizer` — the whole protocol in Rust and Soroban: split and recombine, the yield accumulator, redemption, the time decay PT/USDC AMM, and the carry vault.
+- `contracts/tokenizer` — the whole protocol in Rust and Soroban: split and recombine, the yield accumulator, redemption, the time decay PT/USDC AMM, the carry vault, and the safety guards (bounded sync, pause, deposit cap, admin rotation).
 - `contracts/mock-token` — a small SEP-41 token for the testnet demo.
 - `web/` — the Next.js app: the landing page, the fixed rate app, and the live analytics page.
 - `docs/` — the Mintlify documentation site.
-- `deploy/` — the testnet deployment script.
+- `deploy/deploy_testnet.sh` — deploys the full testnet market (mock tokens, tokenizer, seeded pool).
+- `deploy/deploy_mainnet.sh` — deploys the tokenizer to mainnet against a real yield asset; refuses to run from the wrong wallet or to ship the mock token.
+- `deploy/keeper.sh` — the yield keeper: reads a live Blend rate from DeFiLlama and pushes it on-chain via `sync`.
 
 ## Testing
 
@@ -204,7 +279,8 @@ Every claim above is covered by tests. Run them:
 
 ```bash
 # contracts
-cargo test                       # 9 tests, 2 crates
+cargo test                       # 15 tests, 2 crates
+cargo clippy --all-targets -- -D warnings   # lint, warnings as errors
 stellar contract build           # builds both wasm artifacts
 
 # web
@@ -213,7 +289,7 @@ cd web && pnpm install
 ./node_modules/.bin/next build   # production build
 ```
 
-**Result: 9 passing, 0 failing.**
+**Result: 15 passing, 0 failing.**
 
 | Test | What it proves |
 | --- | --- |
@@ -225,9 +301,15 @@ cd web && pnpm install
 | `carry_vault_locks_fixed_return` | deposit, invest, settle, claim: the vault turns a deposit into a larger payout at maturity |
 | `full_lifecycle_saver_profits_at_maturity` | end to end, a saver locks a rate and redeems more than they paid |
 | `implied_fixed_rate_matches_hand_math` | the on chain rate formula matches hand calculation |
+| `sync_beyond_bound_reverts` | a single `sync` past `MaxSyncBps` reverts, so no push can mint unbounded yield |
+| `sync_within_bound_and_retune` | a normal push accrues yield, and the admin can retune the bound |
+| `pause_blocks_entry_allows_exit` | pause blocks new deposits while recombining out still works |
+| `deposit_while_paused_reverts` | deposits revert while the market is paused |
+| `deposit_cap_enforced` | deposits past the configured cap revert |
+| `admin_rotation` | `set_admin` moves control of the privileged calls |
 | `mint_and_transfer` (mock-token) | the SEP-41 test token mints and transfers |
 
-Beyond unit tests, the deployment is verified live: the web client reads `market_info`, `pt_price`, and `fixed_rate` directly from the testnet contract, and the production web build passes with no type errors.
+Beyond unit tests, the deployment is verified live: the web client reads `market_info`, `pt_price`, and `fixed_rate` directly from the testnet contract, the keeper's `sync` transactions are on-chain, and the production web build passes with no type errors.
 
 ## Running it
 

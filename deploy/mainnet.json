@@ -1,0 +1,13 @@
+{
+  "network": "mainnet",
+  "rpc": "https://mainnet.sorobanrpc.com",
+  "passphrase": "Public Global Stellar Network ; September 2015",
+  "issuer": "GBESJK7N25HADVP5W5RD2OEY6CNUF345ADSX2NKWOMIHJ46ZCHOBE5EP",
+  "tokenizer": "CDZFACPLN7EDI55KU4OOSFWTD56DM4GVAUZJ6CMOUQTFKYUQ2BWFQVZI",
+  "wasmHash": "8b7b2120f8d6abeb99683ae12dbe38ccd43cd60b8094806ee550e62ed7309e35",
+  "underlying_USDY": "CB3YA656OYIHU57657I5KGSBRHE5I3OZU4VFC22PYAOANFZHEWNYGAGP",
+  "quote_USDC": "CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75",
+  "maturity": 1800478580,
+  "deployedAt": 1784926633,
+  "note": "Empty market: no liquidity seeded, unaudited. Not for real deposits until audit + multisig + deposit cap. See deploy/deploy_mainnet.sh and README."
+}

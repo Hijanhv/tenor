@@ -53,11 +53,14 @@ export async function currentAddress(): Promise<string | null> {
   }
 }
 
-export async function onTestnet(): Promise<boolean> {
+// True when Freighter's active network matches the network this app is configured
+// for (CONFIG.network). Works for both testnet and mainnet builds.
+export async function onExpectedNetwork(): Promise<boolean> {
   try {
     const res = await getNetwork();
     const net = (res as { network?: string }).network ?? "";
-    return net.toUpperCase().includes("TEST");
+    const want = CONFIG.network === "mainnet" ? "PUBLIC" : "TEST";
+    return net.toUpperCase().includes(want);
   } catch {
     return false;
   }

@@ -45,7 +45,7 @@ export default async function Analytics() {
           {data.live ? (
             <>Live from DeFiLlama{asOf ? `, updated ${asOf}` : ""}. Refreshes hourly.</>
           ) : (
-            <>Showing the last cached reading from DeFiLlama.</>
+            <>Live feed unavailable — showing illustrative sample figures, not live data.</>
           )}
         </div>
 

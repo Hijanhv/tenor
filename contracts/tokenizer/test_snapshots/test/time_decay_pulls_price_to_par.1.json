@@ -586,6 +586,18 @@
                       "key": {
                         "vec": [
                           {
+                            "symbol": "DepositCap"
+                          }
+                        ]
+                      },
+                      "val": {
+                        "i128": "0"
+                      }
+                    },
+                    {
+                      "key": {
+                        "vec": [
+                          {
                             "symbol": "IndexLast"
                           }
                         ]
@@ -616,6 +628,30 @@
                       },
                       "val": {
                         "u64": "31537000"
+                      }
+                    },
+                    {
+                      "key": {
+                        "vec": [
+                          {
+                            "symbol": "MaxSyncBps"
+                          }
+                        ]
+                      },
+                      "val": {
+                        "i128": "2000"
+                      }
+                    },
+                    {
+                      "key": {
+                        "vec": [
+                          {
+                            "symbol": "Paused"
+                          }
+                        ]
+                      },
+                      "val": {
+                        "i128": "0"
                       }
                     },
                     {

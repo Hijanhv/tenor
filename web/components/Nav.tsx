@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { Logo } from "./Logo";
+import { CONFIG } from "@/lib/config";
+
+const NET_LABEL = CONFIG.network === "mainnet" ? "Mainnet" : "Testnet";
 
 export function Nav({ launch = true }: { launch?: boolean }) {
   return (
@@ -8,7 +11,7 @@ export function Nav({ launch = true }: { launch?: boolean }) {
         <Link href="/" className="flex items-center gap-3">
           <Logo size={54} />
           <span className="text-3xl font-bold tracking-tight">Tenor</span>
-          <span className="pill ml-1 px-2.5 py-0.5 text-[11px] font-medium text-[var(--muted)]">Testnet</span>
+          <span className="pill ml-1 px-2.5 py-0.5 text-[11px] font-medium text-[var(--muted)]">{NET_LABEL}</span>
         </Link>
 
         {launch && (

@@ -1,24 +1,44 @@
 ---
 title: "Deployed contracts"
-description: "The live Stellar testnet contracts the app reads from."
+description: "The live Stellar mainnet and testnet contracts the app reads from."
 ---
 
-All contracts run on **Stellar testnet**. The app reads every value on screen
-straight from these, so nothing in the interface is mocked.
+Tenor runs on two networks. **Mainnet** carries the real protocol against real
+assets. **Testnet** carries the hardened build (v2) with a seeded market you can
+trade in. The app reads every value on screen straight from these contracts.
+
+## Mainnet
+
+Real Ondo USDY splits into PT + YT against real Circle USDC. No mock token is
+deployed to mainnet. The market is live but empty — it holds no liquidity until an
+audit and real capital are in place, so `fixed_rate` and `pt_price` read 0 for now.
 
 | Contract | Role | Address |
 | --- | --- | --- |
-| Tokenizer, AMM, and Vault | The protocol | [`CBETJAH3…FTV4`](https://stellar.expert/explorer/testnet/contract/CBETJAH3AEX2TDBDNL6LRYE4DQVR4GS5Q4C2MASQPXTF5YCFTGQVFTV4) |
-| Test yield asset (TSY) | Underlying SY | [`CC7BAPEI…IGS`](https://stellar.expert/explorer/testnet/contract/CC7BAPEIEPQNONJH7B3ED3OSOXVII4ZAWY2GZ6ONAV5DJV66C35NAIGS) |
-| Test USDC | Stable quote | [`CCEZRDEY…KH2`](https://stellar.expert/explorer/testnet/contract/CCEZRDEYDK6CISZJSRBJGNXUW34X5OEBDYXXF5MJO6N3XFJ3GMXWGKH2) |
+| Tokenizer, AMM, and Vault | The protocol | [`CDZFACPL…QVZI`](https://stellar.expert/explorer/public/contract/CDZFACPLN7EDI55KU4OOSFWTD56DM4GVAUZJ6CMOUQTFKYUQ2BWFQVZI) |
+| Ondo USDY | Underlying SY | [`CB3YA656…YGAGP`](https://stellar.expert/explorer/public/contract/CB3YA656OYIHU57657I5KGSBRHE5I3OZU4VFC22PYAOANFZHEWNYGAGP) |
+| Circle USDC | Stable quote | [`CCW67TSZ…MI75`](https://stellar.expert/explorer/public/contract/CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75) |
 
-## Network
+## Testnet (v2, hardened)
 
-| Field | Value |
-| --- | --- |
-| Network | Testnet |
-| RPC | `https://soroban-testnet.stellar.org` |
-| Passphrase | `Test SDF Network ; September 2015` |
+The underlying and quote are labeled test tokens, because testnet has no real
+assets — but the rates, prices, and balances are read live from the contract, and
+the yield keeper and analytics are driven by real Blend and Ondo data from
+DeFiLlama. This build carries the safety guards: bounded `sync`, `pause`,
+`deposit_cap`, and `set_admin`.
+
+| Contract | Role | Address |
+| --- | --- | --- |
+| Tokenizer, AMM, and Vault | The protocol | [`CAAB3SFP…HVOI`](https://stellar.expert/explorer/testnet/contract/CAAB3SFPT7TT2ADKXBUCGNUIJHQBMIUZTOBEIMCBR4DI54STBGHQHVOI) |
+| Test yield asset (TSY) | Underlying SY | [`CBTKA7CV…57DQ`](https://stellar.expert/explorer/testnet/contract/CBTKA7CVL6GDL3Z4FUPBKELSVFB3JOWHLWGHRO5L3RBTXTO7GWST57DQ) |
+| Test USDC | Stable quote | [`CCGU3ZNA…3T3E`](https://stellar.expert/explorer/testnet/contract/CCGU3ZNAI4OTQSX6JBWFVXFRGJMQAPTAG7KK5OOUXWSOWJLAN7CP3T3E) |
+
+## Networks
+
+| Field | Mainnet | Testnet |
+| --- | --- | --- |
+| RPC | `https://mainnet.sorobanrpc.com` | `https://soroban-testnet.stellar.org` |
+| Passphrase | `Public Global Stellar Network ; September 2015` | `Test SDF Network ; September 2015` |
 
 ## Source
 

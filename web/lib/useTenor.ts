@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Tenor, type Market, type Vault } from "./stellar";
 import { CONFIG } from "./config";
-import { connect as connectWallet, onTestnet } from "./wallet";
+import { connect as connectWallet, onExpectedNetwork } from "./wallet";
 
 export type Balances = {
   usdc: bigint;
@@ -77,7 +77,7 @@ export function useTenor() {
       const a = await connectWallet();
       addrRef.current = a;
       setAddress(a);
-      setWrongNetwork(!(await onTestnet()));
+      setWrongNetwork(!(await onExpectedNetwork()));
       await loadBalances(a);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));

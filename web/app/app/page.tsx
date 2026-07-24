@@ -18,6 +18,9 @@ import {
 const FEE = 9970n;
 type T = ReturnType<typeof useTenor>;
 
+// "Mainnet" / "Testnet" for user-facing copy, derived from the deployment config.
+const NET_LABEL = CONFIG.network === "mainnet" ? "Mainnet" : "Testnet";
+
 export default function AppPage() {
   const t = useTenor();
   const m = t.market;
@@ -32,18 +35,18 @@ export default function AppPage() {
       <div className="bg-ambient" />
       <Nav launch={false} />
 
-      {t.wrongNetwork && <Banner text="Your wallet is not on Testnet. Switch Freighter to the Test network." />}
+      {t.wrongNetwork && <Banner text={`Your wallet is not on ${NET_LABEL}. Switch Freighter to the ${NET_LABEL} network.`} />}
       {t.error && <Banner text={t.error} tone="error" />}
       {t.lastTx && (
-        <Banner tone="ok" text={`Confirmed on testnet: ${t.lastTx.slice(0, 12)}…`}
-          href={`https://stellar.expert/explorer/testnet/tx/${t.lastTx}`} />
+        <Banner tone="ok" text={`Confirmed on ${NET_LABEL.toLowerCase()}: ${t.lastTx.slice(0, 12)}…`}
+          href={CONFIG.tx(t.lastTx)} />
       )}
 
       <main className="mx-auto max-w-5xl px-5 pb-24 pt-8">
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Fixed rate market</h1>
-            <p className="text-sm text-[var(--muted)]">Live on Stellar Testnet, reading straight from the contract.</p>
+            <p className="text-sm text-[var(--muted)]">Live on Stellar {NET_LABEL}, reading straight from the contract.</p>
           </div>
           <WalletButton t={t} />
         </div>
@@ -54,14 +57,14 @@ export default function AppPage() {
             <div className="flex items-center gap-2">
               <span className="dot-live" />
               <div>
-                <div className="text-sm font-medium text-[var(--muted)]">TSY market</div>
+                <div className="text-sm font-medium text-[var(--muted)]">{CONFIG.syLabel} market</div>
                 <div className="text-lg font-semibold">{days} day tenor</div>
               </div>
             </div>
             <div className="grid grid-cols-3 gap-6 text-right">
               <Metric label="Fixed rate" value={m ? pct(t.fixedRate) : "…"} sub="APR" accent />
               <Metric label="PT price" value={m ? ptPriceNum.toFixed(4) : "…"} sub={`+${(periodReturn * 100).toFixed(2)}% at maturity`} />
-              <Metric label="Pool liquidity" value={m ? `$${money(tvl, 0)}` : "…"} sub="TSY · USDC" />
+              <Metric label="Pool liquidity" value={m ? `$${money(tvl, 0)}` : "…"} sub={`${CONFIG.syLabel} · ${CONFIG.usdcLabel}`} />
             </div>
           </div>
           {/* time progress toward maturity */}
@@ -84,7 +87,7 @@ export default function AppPage() {
           <Portfolio t={t} />
           <div className="grid gap-6">
             <Split t={t} />
-            <Faucet t={t} />
+            {CONFIG.faucet ? <Faucet t={t} /> : <GetUnderlying />}
           </div>
         </div>
 
@@ -193,7 +196,7 @@ function Portfolio({ t }: { t: T }) {
         <>
           <div className="mt-4 grid grid-cols-2 gap-3">
             <Stat label="USDC" value={money(fromUnits(b.usdc))} />
-            <Stat label="TSY" value={money(fromUnits(b.sy))} />
+            <Stat label={CONFIG.syLabel} value={money(fromUnits(b.sy))} />
             <Stat label="PT · principal" value={money(fromUnits(b.pt))} grad />
             <Stat label="YT · yield" value={money(fromUnits(b.yt))} amber />
           </div>
@@ -228,9 +231,9 @@ function Split({ t }: { t: T }) {
       <div className="field mt-4 flex items-center gap-3 px-4 py-3">
         <input value={amount} onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ""))}
           inputMode="decimal" className="w-full bg-transparent text-xl font-semibold outline-none" placeholder="0" />
-        <span className="shrink-0 text-sm font-medium text-[var(--muted)]">TSY</span>
+        <span className="shrink-0 text-sm font-medium text-[var(--muted)]">{CONFIG.syLabel}</span>
       </div>
-      <div className="mt-2 text-xs text-[var(--muted)]">Balance {money(sy)} TSY</div>
+      <div className="mt-2 text-xs text-[var(--muted)]">Balance {money(sy)} {CONFIG.syLabel}</div>
       <button disabled={!t.address || t.busy !== null || insufficient || parseFloat(amount || "0") <= 0}
         onClick={() => t.actions.deposit(toUnits(amount))} className="btn-primary mt-4 w-full rounded-xl py-3 font-semibold">
         {t.busy === "deposit" ? "Splitting…" : "Split into PT + YT"}
@@ -256,11 +259,29 @@ function Faucet({ t }: { t: T }) {
   );
 }
 
+// Shown on mainnet in place of the faucet: real USDY/USDC have no public mint, so
+// there is nothing to hand out. This tells the user where the real asset comes from.
+function GetUnderlying() {
+  return (
+    <div className="card p-6">
+      <h2 className="text-lg font-semibold">Get {CONFIG.syLabel}</h2>
+      <p className="mt-1 text-sm text-[var(--muted)]">
+        This is a live {NET_LABEL} market in real {CONFIG.syLabel}. There is no faucet — you bring your own.
+        Acquire {CONFIG.syLabel} (Ondo&rsquo;s tokenized T-bill) and {CONFIG.usdcLabel}, add the trustlines in your wallet, then deposit or trade above.
+      </p>
+      <a href="https://ondo.finance/usdy" target="_blank" rel="noreferrer"
+        className="btn-ghost mt-4 inline-block rounded-xl px-4 py-2 text-sm font-semibold">
+        About USDY ↗
+      </a>
+    </div>
+  );
+}
+
 function OnChain() {
   return (
     <section className="card mt-6 p-6">
       <h2 className="text-lg font-semibold">On chain</h2>
-      <p className="mt-1 text-sm text-[var(--muted)]">Every value on this page is read live from these testnet contracts.</p>
+      <p className="mt-1 text-sm text-[var(--muted)]">Every value on this page is read live from these {NET_LABEL.toLowerCase()} contracts.</p>
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
         {CONTRACTS.map((c) => (
           <a key={c.id} href={CONFIG.explorer(c.id)} target="_blank" rel="noreferrer" className="rounded-2xl border border-[var(--line)] p-4 hover:bg-[var(--bg-2)]">
@@ -332,7 +353,7 @@ function WalletButton({ t }: { t: T }) {
             <div className="break-all px-3 pb-2 pt-1 font-mono text-xs text-[var(--text)]">{t.address}</div>
             {t.wrongNetwork && (
               <div className="mx-1 mb-1 rounded-lg bg-[var(--bg-2)] px-3 py-2 text-xs text-[var(--down)]">
-                Wallet is not on Testnet. Switch Freighter to the Test network.
+                Wallet is not on {NET_LABEL}. Switch Freighter to the {NET_LABEL} network.
               </div>
             )}
             <button

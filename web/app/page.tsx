@@ -97,11 +97,13 @@ export default function Landing() {
           </Faq>
           <Faq q="What can I earn on?">
             Any yield bearing Stellar asset, such as a Blend position, a DeFindex
-            share, or a tokenized treasury. The testnet demo uses a mock yield
-            token so a fresh wallet can try it.
+            share, or a tokenized treasury.{" "}
+            {CONFIG.network === "mainnet"
+              ? "The live mainnet market uses Ondo USDY, a tokenized U.S. treasury."
+              : "The testnet demo uses a mock yield token so a fresh wallet can try it."}
           </Faq>
           <Faq q="Is it live?">
-            Yes, on Stellar testnet. Every number in the app reads straight from
+            Yes, on Stellar {CONFIG.network === "mainnet" ? "mainnet" : "testnet"}. Every number in the app reads straight from
             the contract.
           </Faq>
         </div>

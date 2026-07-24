@@ -2,6 +2,9 @@ import Link from "next/link";
 import { CONFIG, CONTRACTS } from "@/lib/config";
 import { shortAddr } from "@/lib/format";
 
+const IS_MAINNET = CONFIG.network === "mainnet";
+const NET_LABEL = IS_MAINNET ? "Mainnet" : "Testnet";
+
 export function Footer() {
   return (
     <footer className="mt-8 border-t border-[var(--line)] bg-[var(--card)]">
@@ -15,7 +18,7 @@ export function Footer() {
 
         <div>
           <div className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
-            Deployed on testnet
+            Deployed on {NET_LABEL.toLowerCase()}
           </div>
           <ul className="mt-4 space-y-2.5 text-sm">
             {CONTRACTS.map((c) => (
@@ -48,7 +51,9 @@ export function Footer() {
         </div>
       </div>
       <div className="border-t border-[var(--line)] py-5 text-center text-xs text-[var(--muted)]">
-        Tenor runs on Stellar Testnet. Test assets have no real value.
+        {IS_MAINNET
+          ? "Tenor runs on Stellar Mainnet in real USDY and USDC. Unaudited — do not deposit funds you cannot afford to lose."
+          : "Tenor runs on Stellar Testnet. Test assets have no real value."}
       </div>
     </footer>
   );

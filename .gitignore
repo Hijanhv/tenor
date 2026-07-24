@@ -21,6 +21,9 @@ dist
 # OS
 .DS_Store
 
+# Keeper runtime state (local last-sync timestamp)
+deploy/.keeper_state
+
 # Local-only marketing material (kept out of the public repo)
 assets/DEMO_SCRIPT.md
 assets/twitter/THREAD.md

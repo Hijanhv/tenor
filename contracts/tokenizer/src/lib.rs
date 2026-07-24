@@ -33,6 +33,9 @@ pub enum Error {
     IndexWentDown = 7,
     NoLiquidity = 8,
     VaultClosed = 9,
+    Paused = 10,
+    IndexJumpTooBig = 11,
+    DepositCapExceeded = 12,
 }
 
 #[contracttype]
@@ -63,6 +66,10 @@ pub enum DataKey {
     VaultQuote,    // idle USDC in the vault waiting to be invested
     VaultSy,       // SY held after settlement
     VaultSettled,  // 0 = open, 1 = settled at maturity
+    // guards
+    Paused,     // 0 = live, 1 = paused: blocks entries, still allows exits
+    MaxSyncBps, // max per-sync index increase in bps; 0 = unbounded
+    DepositCap, // max total SY value (asset units) held; 0 = uncapped
 }
 
 const FEE_BPS: i128 = 30; // 0.30% swap fee
@@ -133,24 +140,87 @@ impl Tenor {
         s.set(&DataKey::VaultQuote, &0i128);
         s.set(&DataKey::VaultSy, &0i128);
         s.set(&DataKey::VaultSettled, &0i128);
+        // guards: live, sync capped at +20% per push, no deposit cap.
+        s.set(&DataKey::Paused, &0i128);
+        s.set(&DataKey::MaxSyncBps, &2_000i128);
+        s.set(&DataKey::DepositCap, &0i128);
     }
 
     /// Keeper pushes the latest SY->asset rate and accrues yield to YT holders.
+    /// A single push cannot raise the index by more than `MaxSyncBps`.
     pub fn sync(env: Env, new_index: i128) {
         admin(&env).require_auth();
         accrue(&env, new_index);
     }
 
+    // ===================== Admin: guards & rotation =====================
+
+    /// Rotate the admin. Point it at a multisig G-account to put `sync`,
+    /// `vault_invest`, and the setters below behind N-of-M signatures.
+    pub fn set_admin(env: Env, new_admin: Address) {
+        admin(&env).require_auth();
+        env.storage().instance().set(&DataKey::Admin, &new_admin);
+    }
+
+    /// Pause entries (deposit, add_liquidity, buy_pt, vault_deposit, vault_invest).
+    /// Exits (combine, redeem_pt, claim_yield, sell_pt, vault_claim) stay open.
+    pub fn pause(env: Env) {
+        admin(&env).require_auth();
+        env.storage().instance().set(&DataKey::Paused, &1i128);
+    }
+
+    pub fn unpause(env: Env) {
+        admin(&env).require_auth();
+        env.storage().instance().set(&DataKey::Paused, &0i128);
+    }
+
+    /// Cap the total SY value (asset units) the market will hold. 0 = uncapped.
+    pub fn set_deposit_cap(env: Env, cap: i128) {
+        admin(&env).require_auth();
+        if cap < 0 {
+            panic_err(&env, Error::BadAmount);
+        }
+        env.storage().instance().set(&DataKey::DepositCap, &cap);
+    }
+
+    /// Max per-`sync` index increase, in bps (2000 = +20%). 0 = unbounded.
+    pub fn set_max_sync_bps(env: Env, bps: i128) {
+        admin(&env).require_auth();
+        if bps < 0 {
+            panic_err(&env, Error::BadAmount);
+        }
+        env.storage().instance().set(&DataKey::MaxSyncBps, &bps);
+    }
+
+    pub fn is_paused(env: Env) -> bool {
+        get_i128(&env, &DataKey::Paused) == 1
+    }
+    pub fn deposit_cap(env: Env) -> i128 {
+        get_i128(&env, &DataKey::DepositCap)
+    }
+    pub fn max_sync_bps(env: Env) -> i128 {
+        get_i128(&env, &DataKey::MaxSyncBps)
+    }
+
     /// Deposit `sy_amt` of the underlying SY; mint equal PT and YT (asset-denominated).
     pub fn deposit(env: Env, user: Address, sy_amt: i128) -> i128 {
         user.require_auth();
+        require_not_paused(&env);
         if sy_amt <= 0 {
             panic_err(&env, Error::BadAmount);
         }
         let idx = index(&env);
+        // Enforce the deposit cap on total SY value (asset units) before pulling funds.
+        let cap = get_i128(&env, &DataKey::DepositCap);
+        if cap > 0 {
+            let after = (get_i128(&env, &DataKey::TotalSy) + sy_amt) * idx / SCALE;
+            if after > cap {
+                panic_err(&env, Error::DepositCapExceeded);
+            }
+        }
         token::TokenClient::new(&env, &underlying(&env)).transfer(
             &user,
-            &env.current_contract_address(),
+            env.current_contract_address(),
             &sy_amt,
         );
         let notional = sy_amt * idx / SCALE; // asset value of the SY deposited
@@ -259,6 +329,7 @@ impl Tenor {
     /// Seed / add liquidity to the PT-quote pool. Returns LP shares minted.
     pub fn add_liquidity(env: Env, provider: Address, pt_in: i128, quote_in: i128) -> i128 {
         provider.require_auth();
+        require_not_paused(&env);
         if pt_in <= 0 || quote_in <= 0 {
             panic_err(&env, Error::BadAmount);
         }
@@ -272,7 +343,7 @@ impl Tenor {
         // pull quote token
         token::TokenClient::new(&env, &quote(&env)).transfer(
             &provider,
-            &env.current_contract_address(),
+            env.current_contract_address(),
             &quote_in,
         );
         set_i128(&env, &DataKey::ReserveQuote, rq + quote_in);
@@ -292,6 +363,7 @@ impl Tenor {
     /// Buy PT with `quote_in` of the stable token, this LOCKS A FIXED RATE.
     pub fn buy_pt(env: Env, buyer: Address, quote_in: i128) -> i128 {
         buyer.require_auth();
+        require_not_paused(&env);
         if quote_in <= 0 {
             panic_err(&env, Error::BadAmount);
         }
@@ -306,7 +378,7 @@ impl Tenor {
         let pt_out = rp * dx / (eff + dx);
         token::TokenClient::new(&env, &quote(&env)).transfer(
             &buyer,
-            &env.current_contract_address(),
+            env.current_contract_address(),
             &quote_in,
         );
         set_i128(&env, &DataKey::ReserveQuote, rq + quote_in);
@@ -385,6 +457,7 @@ impl Tenor {
     /// Deposit `quote_in` of the stable token into the carry vault. Returns shares minted.
     pub fn vault_deposit(env: Env, user: Address, quote_in: i128) -> i128 {
         user.require_auth();
+        require_not_paused(&env);
         if quote_in <= 0 {
             panic_err(&env, Error::BadAmount);
         }
@@ -394,7 +467,7 @@ impl Tenor {
         let nav = vault_nav_quote(&env); // NAV before this deposit
         token::TokenClient::new(&env, &quote(&env)).transfer(
             &user,
-            &env.current_contract_address(),
+            env.current_contract_address(),
             &quote_in,
         );
         let total_shares = get_i128(&env, &DataKey::VaultTotalShares);
@@ -416,6 +489,7 @@ impl Tenor {
     /// Keeper deploys `amount` of idle vault cash into PT at the current price (the carry).
     pub fn vault_invest(env: Env, amount: i128) -> i128 {
         admin(&env).require_auth();
+        require_not_paused(&env);
         let idle = get_i128(&env, &DataKey::VaultQuote);
         if amount <= 0 || amount > idle {
             panic_err(&env, Error::BadAmount);
@@ -527,6 +601,15 @@ fn accrue(env: &Env, new_index: i128) {
     let last = index(env);
     if new_index < last {
         panic_err(env, Error::IndexWentDown);
+    }
+    // Bound how far a single sync can raise the index, so one oversized push
+    // cannot mint unbounded yield to YT holders.
+    let max_bps = get_i128(env, &DataKey::MaxSyncBps);
+    if max_bps > 0 {
+        let ceiling = last * (10_000 + max_bps) / 10_000;
+        if new_index > ceiling {
+            panic_err(env, Error::IndexJumpTooBig);
+        }
     }
     let total_sy = get_i128(env, &DataKey::TotalSy);
     let total_yt = get_i128(env, &DataKey::TotalYt);
@@ -677,6 +760,14 @@ fn set_i128(env: &Env, key: &DataKey, val: i128) {
         env.storage().persistent().set(key, &val)
     } else {
         env.storage().instance().set(key, &val)
+    }
+}
+
+/// Reverts if the market is paused. Guards entry points; exits stay open so users
+/// can always withdraw even during a pause.
+fn require_not_paused(env: &Env) {
+    if get_i128(env, &DataKey::Paused) == 1 {
+        panic_err(env, Error::Paused);
     }
 }
 
