@@ -263,6 +263,8 @@ Next, in order:
 5. **PT and YT trading** routed through the Stellar DEX and Soroban AMMs, and **Reflector** for production marks.
 6. **More maturities and markets**, so savers can choose a tenor and issuers can list their own assets.
 
+**What this needs.** The gating resource is not code, it is funding. Deploying the hardened v2 to mainnet and keeping it alive for a year costs on the order of **~250 XLM** (measured: ~31 XLM to upload, plus ~90 XLM/year in rent, plus headroom for a post-audit redeploy). The audit itself is effectively free through the Soroban Security Audit Bank once Tenor is an SCF award recipient. And seeding a real market is capital in real USDY and USDC, not XLM. So the path is: **SCF grant → free audit → fund the mainnet v2 deploy and rent → seed real liquidity.**
+
 ## Repository layout
 
 - `contracts/tokenizer` — the whole protocol in Rust and Soroban: split and recombine, the yield accumulator, redemption, the time decay PT/USDC AMM, the carry vault, and the safety guards (bounded sync, pause, deposit cap, admin rotation).
