@@ -103,8 +103,25 @@ export default function Landing() {
               : "The testnet demo uses a mock yield token so a fresh wallet can try it."}
           </Faq>
           <Faq q="Is it live?">
-            Yes, on Stellar {CONFIG.network === "mainnet" ? "mainnet" : "testnet"}. Every number in the app reads straight from
-            the contract.
+            Yes. The protocol is live on Stellar mainnet with real Ondo USDY and
+            Circle USDC.
+            {CONFIG.network === "mainnet"
+              ? " This app reads that mainnet market directly."
+              : " This app runs on the hardened testnet build, with a seeded, tradeable market so you can try the full flow end to end."}
+            {" "}Every number on screen is read straight from the contract.
+          </Faq>
+          <Faq q="Does the fixed rate use real yield data?">
+            Yes. A keeper reads Blend&rsquo;s live USDC lending rate from DeFiLlama
+            and pushes it on chain, so the market tracks real Stellar yield instead
+            of a set number. The analytics page charts the same live Blend and Ondo
+            rates.
+          </Faq>
+          <Faq q="Is it audited? Can I deposit real funds?">
+            Not yet audited, so the mainnet market is intentionally empty and not
+            open for deposits. The contract already ships the guards an audit
+            expects &mdash; a bounded yield oracle, an emergency pause, a deposit
+            cap, and admin rotation &mdash; and a Soroban security audit is the next
+            step before real deposits open.
           </Faq>
         </div>
       </section>
