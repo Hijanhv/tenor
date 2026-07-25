@@ -25,11 +25,11 @@
 </p>
 
 <p align="center">
-  <video src="https://github.com/Hijanhv/tenor/releases/download/assets-v1/tenor-demo.mp4" controls muted playsinline width="640" poster="https://img.youtube.com/vi/CiplkkkV45M/maxresdefault.jpg">
-    <a href="https://www.youtube.com/watch?v=CiplkkkV45M">Watch the Tenor demo</a>
-  </video>
+  <a href="https://www.youtube.com/watch?v=CiplkkkV45M">
+    <img src="https://img.youtube.com/vi/CiplkkkV45M/maxresdefault.jpg" alt="Watch the Tenor demo" width="640"/>
+  </a>
   <br/>
-  <sub>▶ Product demo — also on <a href="https://www.youtube.com/watch?v=CiplkkkV45M">YouTube</a></sub>
+  <sub>▶ Watch the demo</sub>
 </p>
 
 ---
