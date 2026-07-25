@@ -24,12 +24,10 @@
   <a href="https://x.com/tenor_stellar">Twitter</a>
 </p>
 
+https://github.com/user-attachments/assets/2fdbe1cd-acd9-4cdb-89d2-ce88b29a5c79
+
 <p align="center">
-  <a href="https://www.youtube.com/watch?v=CiplkkkV45M">
-    <img src="https://img.youtube.com/vi/CiplkkkV45M/maxresdefault.jpg" alt="Watch the Tenor demo" width="640"/>
-  </a>
-  <br/>
-  <sub>▶ Watch the demo</sub>
+  <sub>▶ Product demo — also on <a href="https://www.youtube.com/watch?v=CiplkkkV45M">YouTube</a></sub>
 </p>
 
 ---
