@@ -18,6 +18,8 @@
   <b><a href="https://tenor-blond-xi.vercel.app">Live app</a></b> ·
   <b><a href="https://tenor-421719bc.mintlify.site">Docs</a></b> ·
   <a href="https://www.youtube.com/watch?v=CiplkkkV45M">Demo video</a> ·
+  <a href="assets/tenor-demo.mp4">Animated explainer</a> ·
+  <a href="assets/Tenor-Pitch.pptx">Pitch deck</a> ·
   <a href="https://stellar.expert/explorer/public/contract/CDZFACPLN7EDI55KU4OOSFWTD56DM4GVAUZJ6CMOUQTFKYUQ2BWFQVZI">Mainnet contract</a> ·
   <a href="https://x.com/tenor_stellar">Twitter</a>
 </p>
