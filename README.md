@@ -2,6 +2,8 @@
   <img src="assets/tenor-banner.png" alt="Tenor — the fixed rate market for Stellar" width="880"/>
 </p>
 
+<h1 align="center">Tenor</h1>
+
 <p align="center"><b>The fixed rate market for Stellar.</b> Split any yield bearing asset into a Principal token and a Yield token. Lock a guaranteed return, or trade the interest rate on its own.</p>
 
 <p align="center">
@@ -31,6 +33,26 @@ https://github.com/user-attachments/assets/2fdbe1cd-acd9-4cdb-89d2-ce88b29a5c79
 </p>
 
 ---
+
+## About
+
+Tenor is a yield tokenization protocol on Stellar, written in Rust for Soroban. It takes any yield bearing asset — a Blend lending position, a DeFindex vault share, a tokenized treasury like Ondo USDY — plus a maturity date, and splits it into two tradeable tokens: a **principal token (PT)** that redeems for exactly 1.00 of the asset at maturity, and a **yield token (YT)** that collects all the yield earned until then. `PT(x) + YT(x) = x`, always, so the two recombine back into the original asset at any time.
+
+Buying a principal token below par is a fixed rate locked at purchase, guaranteed by the contract rather than by a counterparty. Buying a yield token is a clean long or short on the interest rate itself. On top of the tokenizer, Tenor ships a time decay rate AMM that prices PT against USDC and derives the implied fixed rate on chain, and a carry vault that turns the whole strategy into a single deposit.
+
+Stellar today has real yield and no way to fix it. Tenor is the missing interest rate layer: the first fixed rate market on the network, live on mainnet against real Ondo USDY and real Circle USDC.
+
+## Mainnet contract
+
+The Tenor tokenizer + rate AMM, live on Stellar Mainnet:
+
+```
+CDZFACPLN7EDI55KU4OOSFWTD56DM4GVAUZJ6CMOUQTFKYUQ2BWFQVZI
+```
+
+[View on Stellar Expert →](https://stellar.expert/explorer/public/contract/CDZFACPLN7EDI55KU4OOSFWTD56DM4GVAUZJ6CMOUQTFKYUQ2BWFQVZI) · underlying is real [Ondo USDY](https://stellar.expert/explorer/public/contract/CB3YA656OYIHU57657I5KGSBRHE5I3OZU4VFC22PYAOANFZHEWNYGAGP), quote is real [Circle USDC](https://stellar.expert/explorer/public/contract/CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75). Wasm hash `8b7b2120…09e35`, full record in [`deploy/mainnet.json`](deploy/mainnet.json).
+
+> The mainnet market launched **empty and unaudited** — it is proof the protocol is live, not an invitation to deposit. Real deposits are gated behind an audit, a multisig admin, and a deposit cap (see [Roadmap](#roadmap)). The interactive demo runs on the hardened v2 build on [testnet](#deployments).
 
 ## The problem
 
